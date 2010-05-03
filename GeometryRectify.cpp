@@ -1542,7 +1542,7 @@ void CGeometryRectify::TriangleFillinFst(CImage* pSrcImage, CImage* pDstImage,
 			xdst=j;
 			PolyTrans(xdst, ydst, &xsrc, &ysrc);
 			memset(pPixel, 0, nBPP);
-			// NearestNeighbour in the triangle and Bilinear on the borderline. [ZuoW, 2009/11/17]
+			// 反推法，通过在源影像上重采样实现。 [ZuoW, 2009/11/17]
 			pSrcImage->GetPixelF((float)xsrc, (float)ysrc, pPixel,
 					nResampleMethod);
 			pDstImage->SetPixel(ydst, xdst, pPixel);
