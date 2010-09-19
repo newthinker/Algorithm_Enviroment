@@ -24,23 +24,23 @@
 <folderInfo id="cdt.managedbuild.config.gnu.so.debug.695913934." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.4649699" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.so.debug.1744087425" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.debug"/>
-<builder buildPath="${workspace_loc:/Algorithm/Debug}" id="cdt.managedbuild.target.gnu.builder.so.debug.1971805420" managedBuildOn="true" name="Gnu Make Builder.Debug" superClass="cdt.managedbuild.target.gnu.builder.so.debug"/>
+<builder buildPath="${workspace_loc:/Algorithm/Debug}" id="cdt.managedbuild.target.gnu.builder.so.debug.1971805420" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.so.debug"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.595766378" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.923854930" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug">
-<option id="gnu.cpp.compiler.so.debug.option.optimization.level.793397444" superClass="gnu.cpp.compiler.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.so.debug.option.debugging.level.709113504" superClass="gnu.cpp.compiler.so.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.so.debug.option.optimization.level.793397444" name="Optimization Level" superClass="gnu.cpp.compiler.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.so.debug.option.debugging.level.709113504" name="Debug Level" superClass="gnu.cpp.compiler.so.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.965777255" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.1452033941" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug">
-<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.so.debug.option.optimization.level.2018438097" superClass="gnu.c.compiler.so.debug.option.optimization.level" valueType="enumerated"/>
-<option id="gnu.c.compiler.so.debug.option.debugging.level.765302175" superClass="gnu.c.compiler.so.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.so.debug.option.optimization.level.2018438097" name="Optimization Level" superClass="gnu.c.compiler.so.debug.option.optimization.level" valueType="enumerated"/>
+<option id="gnu.c.compiler.so.debug.option.debugging.level.765302175" name="Debug Level" superClass="gnu.c.compiler.so.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.477596235" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.linker.so.debug.120337632" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.debug">
-<option defaultValue="true" id="gnu.c.link.so.debug.option.shared.668412857" superClass="gnu.c.link.so.debug.option.shared" valueType="boolean"/>
+<option defaultValue="true" id="gnu.c.link.so.debug.option.shared.668412857" name="Shared (-shared)" superClass="gnu.c.link.so.debug.option.shared" valueType="boolean"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.915668657" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.debug">
-<option defaultValue="true" id="gnu.cpp.link.so.debug.option.shared.353995657" superClass="gnu.cpp.link.so.debug.option.shared" valueType="boolean"/>
+<option defaultValue="true" id="gnu.cpp.link.so.debug.option.shared.353995657" name="Shared (-shared)" superClass="gnu.cpp.link.so.debug.option.shared" valueType="boolean"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1820036218" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 <additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -469,6 +469,7 @@
 </scannerConfigBuildInfo>
 </storageModule>
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 </cconfiguration>
 <cconfiguration id="cdt.managedbuild.config.gnu.so.release.422262027">
 <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.so.release.422262027" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -491,23 +492,23 @@
 <folderInfo id="cdt.managedbuild.config.gnu.so.release.422262027." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.so.release.447852527" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.release">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.so.release.396077275" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.release"/>
-<builder buildPath="${workspace_loc:/Algorithm/Release}" id="cdt.managedbuild.target.gnu.builder.so.release.933457759" managedBuildOn="true" name="Gnu Make Builder.Release" superClass="cdt.managedbuild.target.gnu.builder.so.release"/>
+<builder buildPath="${workspace_loc:/Algorithm/Release}" id="cdt.managedbuild.target.gnu.builder.so.release.933457759" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.so.release"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.622355989" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.65053590" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.release">
-<option id="gnu.cpp.compiler.so.release.option.optimization.level.126173902" superClass="gnu.cpp.compiler.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
-<option id="gnu.cpp.compiler.so.release.option.debugging.level.2075526909" superClass="gnu.cpp.compiler.so.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.so.release.option.optimization.level.126173902" name="Optimization Level" superClass="gnu.cpp.compiler.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.so.release.option.debugging.level.2075526909" name="Debug Level" superClass="gnu.cpp.compiler.so.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.850869938" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.compiler.so.release.1860075932" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.release">
-<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.so.release.option.optimization.level.965414941" superClass="gnu.c.compiler.so.release.option.optimization.level" valueType="enumerated"/>
-<option id="gnu.c.compiler.so.release.option.debugging.level.1115118592" superClass="gnu.c.compiler.so.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.so.release.option.optimization.level.965414941" name="Optimization Level" superClass="gnu.c.compiler.so.release.option.optimization.level" valueType="enumerated"/>
+<option id="gnu.c.compiler.so.release.option.debugging.level.1115118592" name="Debug Level" superClass="gnu.c.compiler.so.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1649304637" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.linker.so.release.2084064510" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.release">
-<option defaultValue="true" id="gnu.c.link.so.release.option.shared.587238149" superClass="gnu.c.link.so.release.option.shared" valueType="boolean"/>
+<option defaultValue="true" id="gnu.c.link.so.release.option.shared.587238149" name="Shared (-shared)" superClass="gnu.c.link.so.release.option.shared" valueType="boolean"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.release.449039436" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.release">
-<option defaultValue="true" id="gnu.cpp.link.so.release.option.shared.1160010890" superClass="gnu.cpp.link.so.release.option.shared" valueType="boolean"/>
+<option defaultValue="true" id="gnu.cpp.link.so.release.option.shared.1160010890" name="Shared (-shared)" superClass="gnu.cpp.link.so.release.option.shared" valueType="boolean"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1029102740" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 <additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -935,6 +936,8 @@
 </profile>
 </scannerConfigBuildInfo>
 </storageModule>
+<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+<storageModule moduleId="org.eclipse.cdt.core.language.mapping"/>
 </cconfiguration>
 </storageModule>
 <storageModule moduleId="cdtBuildSystem" version="4.0.0">
