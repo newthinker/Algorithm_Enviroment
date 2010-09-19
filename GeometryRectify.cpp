@@ -1,9 +1,11 @@
-// GeometryRectify.cpp: implementation of the CGeometryRectify class.
+﻿// GeometryRectify.cpp: implementation of the CGeometryRectify class.
 //
 //////////////////////////////////////////////////////////////////////
 
+#include <vector>
+#include "apfloat.h"
+using namespace std;
 #include "GeometryRectify.h"
-//#include "Tin.h"
 #include "Triangle.h"
 #include "FArray.hpp"
 #include "RPCParm.h"
@@ -343,7 +345,6 @@ HRESULT CGeometryRectify::ImagePolyZRectify(CDEM* pDEM, char* pszSrcImage,
 	
 	//������������
 	CProgress progress;
-	//progress.AddCurInfo("[FGC]");
 
 	//��ԭʼӰ��
 	CImage srcImage;
@@ -354,17 +355,16 @@ HRESULT CGeometryRectify::ImagePolyZRectify(CDEM* pDEM, char* pszSrcImage,
 
 		return S_FALSE;
 	}
-	//add by dy 20080925 for DE_ABERRATION ,it is Transfer Init ROWS begin
-	
-	double *pTempSrcX=pSrcX;
-	 for(int i=0;i<nPtNum;i++)
-	 {
 
-	 //de_aberration(pTempSrcX,0);
-	 pTempSrcX++;
-	 }
-	 //return S_OK;
-	 pTempSrcX=NULL;
+	double *pTempSrcX=pSrcX;
+	for(int i=0;i<nPtNum;i++)
+	{
+
+	//de_aberration(pTempSrcX,0);
+	pTempSrcX++;
+	}
+	//return S_OK;
+	pTempSrcX=NULL;
 
 	//add by dy 20080925 for DE_ABERRATION ,it is Transfer Init ROWS end
 	int nSrcRow,nSrcCol,nBandNum,nBPB;
@@ -446,6 +446,29 @@ HRESULT CGeometryRectify::ImagePolyZRectify(CDEM* pDEM, char* pszSrcImage,
 	//����Ŀ��Ӱ��ԴӰ���ת������
 	double Error;
 	CalcPolyZTransPara(pDstX,pDstY,pDstZ,pSrcX,pSrcY,nPtNum,nPolytransType,&Error);
+/*	// Output the coef.
+	FILE* fp = fopen("/dps/workdir/CCD2/LEVEL3/376/TinCoef.txt", "a+");
+	if(fp!=NULL)
+	{
+		for(int num=0; num<nPtNum; num++)
+		{
+			fprintf(fp, "The %dth point:%lf, %lf, %lf, %lf, %lf\n", num+1,
+					pSrcX[num], pSrcY[num], pDstX[num], pDstY[num], pDstZ[num]);
+		}
+		fprintf(fp, "The coef. are:\n");
+		for(int num=0; num<15; num++)
+		{
+			fprintf(fp, "%8.6e, %8.6e\n", m_pCoeX[num], m_pCoeY[num]);
+		}
+		fprintf(fp, "\n");
+		fprintf(fp, "\n");
+		fprintf(fp, "\n");
+		fclose(fp);
+	}
+*/
+// Print the coef. [ZuoW, 2010/5/20]
+	printf("X coef.:%f, %f, %f\n", m_pCoeX[0], m_pCoeX[1], m_pCoeX[2]);
+	printf("Y coef.:%f, %f, %f\n", m_pCoeY[0], m_pCoeY[1], m_pCoeY[2]);
 
 	char szTemp[256];
 	sprintf(szTemp,"Processing %s ...",pszSrcImage);
@@ -474,7 +497,7 @@ HRESULT CGeometryRectify::ImagePolyZRectify(CDEM* pDEM, char* pszSrcImage,
 			
 			PolyTransZ(X,Y,Z,&x,&y);
 
-			// Bands circling correcting for CCD. [WeiZ,4/17/2009]
+			// Bands circling correcting for CCD. [ZuoW,2009/4/17]
 			if(nSensorType==SENSOR_CCD1||nSensorType==SENSOR_CCD2)
 			{
 				x=x+pMatchBandParam[1];
@@ -519,11 +542,9 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 		double outputGSD)
 {
 	HRESULT hRet=S_FALSE;
-	//������������
+	// 进度条
 	CProgress progress;
-	//progress.AddCurInfo("[FGC]");
 
-	//��ԭʼӰ��
 	CImage srcImage;
 	if(srcImage.Open(pszSrcImage,modeRead)!=S_OK)
 	{
@@ -541,8 +562,7 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 	srcImage.GetDataType(&datatype);
 	int nBPB;
 	srcImage.GetBPB(&nBPB);
-//	int nBPP=nBPB*nBandNum;
-	//ȷ�ϸ�����Ӱ��Χ��׼ȷ��
+
 	if(fabs(outputRTY-outputLBY)<1e-6||fabs(outputRTX-outputLBX)<1e-6)
 	{
 		double X0,Y0,X1,Y1,X2,Y2,X3,Y3;
@@ -567,10 +587,10 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 		outputRTX=__max(__max(X0,X1),__max(X2,X3));
 		outputRTY=__max(__max(Y0,Y1),__max(Y2,Y3));
 	}
-	//����Ŀ��Ӱ���������
+	// 目标影像行列号
 	int nDstRow=abs(int((outputRTY-outputLBY)/outputGSD+0.5));
 	int nDstCol=abs(int((outputRTX-outputLBX)/outputGSD+0.5));
-	//����Ŀ��Ӱ��
+
 	CImage dstImage;
 	if(dstImage.CreateImg(pszDstImage,modeCreate|modeWrite,
 					nDstCol,nDstRow,datatype,
@@ -581,7 +601,7 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 
 		return S_FALSE;
 	}
-	//������ɫ����Ϣ
+
 	HRESULT hColorTable=srcImage.HaveColorTable();
 	if(hColorTable==S_OK)
 	{
@@ -594,7 +614,6 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 		pColorTable=NULL;
 	}
 
-	//�����Ƶ������ת��Ϊ���Ƶ���Ŀ��Ӱ���ϵ�Ӱ�����
 	double* pSrcImgX=new double[nPtNum+4];
 	double* pSrcImgY=new double[nPtNum+4];
 	double* pDstImgX=new double[nPtNum+4];
@@ -607,7 +626,7 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 		pDstImgX[i]=(pDstX[i]-outputLBX)/outputGSD;
 		pDstImgY[i]=(pDstY[i]-outputLBY)/outputGSD;
 	}
-	//����Ŀ��Ӱ����ĸ�ǵ�
+
 	double Error;
 	InitPolyTransMatrix(pDstImgX,pDstImgY,pSrcImgX,pSrcImgY,nPtNum,&Error,nPolytransType);
 	pDstImgX[nPtNum+0]=0; pDstImgY[nPtNum+0]=0;
@@ -620,7 +639,7 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 	}
 	nPtNum=nPtNum+4;
 
-	//����
+	// 构建TIN
 	triangulateio in,mid,vorout;
 	memset(&in,0,sizeof(triangulateio));
 	memset(&mid,0,sizeof(triangulateio));
@@ -714,7 +733,7 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 					{
 //						xDstTriangle[3+k] = mid.pointList[mid.triList[iNghTriID*3+k]*2+0];
 //						yDstTriangle[3+k] = mid.pointList[mid.triList[iNghTriID*3+k]*2+1];
-						
+
 //						xSrcTriangle[3+k] = pSrcImgX[mid.triList[iNghTriID*3+k]];
 //						ySrcTriangle[3+k] = pSrcImgY[mid.triList[iNghTriID*3+k]];
 					}
@@ -762,11 +781,484 @@ HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
 	delete [] pDstImgX; pDstImgX=NULL;
 	delete [] pDstImgY; pDstImgY=NULL;
 
-	//�ر�Ӱ��
 	srcImage.Close();
 	dstImage.Close();
 
 	return hRet;
+}
+
+/*
+ * 改进后的TIN纠正，增加了根据多项式阶数自动搜索GCP功能，并融合了带高程的多项式纠正算法。 [ZuoW,2010/7/7]
+ */
+HRESULT CGeometryRectify::ImageTinRectify(char* pszSrcImage,
+		char* pszDstImage, char* szDEMFile,
+		double *pSrcX, double *pSrcY,
+		double *pDstX, double *pDstY, double *pDstZ,
+		int nPtNum,
+		UINT nPolytransType,
+		UINT nResampleMethod,
+		double outputLBX, double outputLBY,
+		double outputRTX, double outputRTY,
+		double outputGSD)
+{
+	HRESULT hRet=S_FALSE;
+	// 进度条
+	CProgress progress;
+
+	// 打开源影像
+	CImage srcImage;
+	if(srcImage.Open(pszSrcImage,modeRead)!=S_OK)
+	{
+		COutput::OutputFileOpenFailed(pszSrcImage);
+
+		return S_FALSE;
+	}
+
+	int nSrcRow,nSrcCol;
+	srcImage.GetRows(&nSrcRow);
+	srcImage.GetCols(&nSrcCol);
+	int nBandNum;
+	srcImage.GetBandNum(&nBandNum);
+	UINT datatype;
+	srcImage.GetDataType(&datatype);
+	int nBPB;
+	srcImage.GetBPB(&nBPB);
+//	int nBPP=nBPB*nBandNum;
+	// 计算目标影像范围
+	if(fabs(outputRTY-outputLBY)<1e-6||fabs(outputRTX-outputLBX)<1e-6)
+	{
+		double X0,Y0,X1,Y1,X2,Y2,X3,Y3;
+		double Error;
+		double inLBX=0.0f;
+		double inLBY=0.0f;
+		double inRTX=nSrcCol-1;
+		double inRTY=nSrcRow-1;
+		//de_aberration(&inLBX,0);
+		//de_aberration(&inLBY,0);
+		//de_aberration(&inRTX,0);
+		//de_aberration(&inRTY,0);
+		printf("inLBX is %lf,inLBY is %lf,inRTX is %lf ,inRTY is %lf\n",inLBX,inLBY,inRTX,inRTY);
+		InitPolyTransMatrix(pSrcX,pSrcY,pDstX,pDstY,nPtNum,&Error,nPolytransType);
+		PolyTrans(inLBX,inLBY,&X0,&Y0);
+		PolyTrans(inLBX,inRTY,&X1,&Y1);
+		PolyTrans(inRTX,inRTY,&X2,&Y2);
+		PolyTrans(inRTX,inLBY,&X3,&Y3);
+
+		outputLBX=__min(__min(X0,X1),__min(X2,X3));
+		outputLBY=__min(__min(Y0,Y1),__min(Y2,Y3));
+		outputRTX=__max(__max(X0,X1),__max(X2,X3));
+		outputRTY=__max(__max(Y0,Y1),__max(Y2,Y3));
+	}
+	// 计算目标影像行/列号
+	int nDstRow=abs(int((outputRTY-outputLBY)/outputGSD+0.5));
+	int nDstCol=abs(int((outputRTX-outputLBX)/outputGSD+0.5));
+	// 生成目标影像
+	CImage dstImage;
+	if(dstImage.CreateImg(pszDstImage,modeCreate|modeWrite,
+					nDstCol,nDstRow,datatype,
+					nBandNum,BSQ,
+					outputLBX,outputLBY,outputGSD)!=S_OK)
+	{
+		COutput::OutputFileOpenFailed(pszDstImage);
+
+		return S_FALSE;
+	}
+	// 如果源影像有颜色表就赋值给目标影像
+	HRESULT hColorTable=srcImage.HaveColorTable();
+	if(hColorTable==S_OK)
+	{
+		int nEntryNum=0;
+		srcImage.GetEntryNum(&nEntryNum);
+		RGBQUAD* pColorTable=new RGBQUAD[nEntryNum];
+		srcImage.GetColorTable((BYTE*)pColorTable);
+		dstImage.SetColorTable((BYTE*)pColorTable,nEntryNum);
+		delete [] pColorTable;
+		pColorTable=NULL;
+	}
+
+	/// 打开DEM文件 [ZuoW,2010/5/18]
+	CDEM* pDEM = new CNSDTFDEM;
+	hRet = pDEM->Open(szDEMFile, 0, modeRead);
+	if(hRet!=S_OK)
+	{
+		printf("Open DEM file failed and return!\n");
+		return S_FALSE;
+	}
+
+	// 将四个角点加入控制点列表中
+	double* pSrcImgX=new double[nPtNum+4];
+	double* pSrcImgY=new double[nPtNum+4];
+	double* pDstImgX=new double[nPtNum+4];
+	double* pDstImgY=new double[nPtNum+4];
+	double* pDstImgZ=new double[nPtNum+4];
+	int i=0;
+	for(i=0;i<nPtNum;i++)
+	{
+		pSrcImgX[i]=pSrcX[i];
+		pSrcImgY[i]=pSrcY[i];
+		pDstImgX[i]=(pDstX[i]-outputLBX)/outputGSD;
+		pDstImgY[i]=(pDstY[i]-outputLBY)/outputGSD;
+		pDstImgZ[i]=pDstZ[i];
+	}
+	// 计算四个角点的坐标
+	pSrcImgX[nPtNum+0] = 0;	pSrcImgY[nPtNum+0] = 0;
+	pSrcImgX[nPtNum+1] = 0;	pSrcImgY[nPtNum+1] = nSrcRow-1;
+	pSrcImgX[nPtNum+2] = nSrcCol-1;	pSrcImgY[nPtNum+2] = nSrcRow-1;
+	pSrcImgX[nPtNum+3] = nSrcCol-1; pSrcImgY[nPtNum+3] = 0;
+	pDstImgX[nPtNum+0]=0; pDstImgY[nPtNum+0]=0;
+	pDstImgX[nPtNum+1]=0; pDstImgY[nPtNum+1]=nDstRow-1;
+	pDstImgX[nPtNum+2]=nDstCol-1; pDstImgY[nPtNum+2]=nDstRow-1;
+	pDstImgX[nPtNum+3]=nDstCol-1; pDstImgY[nPtNum+3]=0;
+	for(i=0;i<4;i++)
+	{
+		double Z = 0.;
+		pDEM->GetAltitude(outputLBX+pDstImgX[nPtNum+i]*outputGSD, outputLBY+pDstImgY[nPtNum+i]*outputGSD, &Z, 0);
+		pDstImgZ[nPtNum+i] = Z;
+	}
+	nPtNum=nPtNum+4;
+
+	// 构造TIN
+	triangulateio in,mid,vorout;
+	memset(&in,0,sizeof(triangulateio));
+	memset(&mid,0,sizeof(triangulateio));
+	memset(&vorout,0,sizeof(triangulateio));
+
+	in.numOfPoints=nPtNum;
+	in.numOfPointAttrs=1;
+	in.numOfTriangles=0;
+	in.numOfCorners=0;
+	in.numOfHoles=0;
+	in.numOfRegions=0;
+	in.numOfSegments=0;
+
+	in.pointList=new REAL[in.numOfPoints*2];
+	in.pointAttrList=new REAL[in.numOfPoints];
+	in.pointMarkList=new int[in.numOfPoints];
+
+/*	/// 输出TIN顶点
+	FILE *fp = fopen("/home/zuowei/workspace/test/gm.txt", "w");
+	if(fp==NULL)
+		printf("Bad file!\n");
+	fprintf(fp, "%d\n", nPtNum);
+*/	
+	for(i=0;i<nPtNum;i++)
+	{
+		in.pointList[i*2+0]=pDstImgX[i];
+		in.pointList[i*2+1]=pDstImgY[i];
+		in.pointAttrList[i]=0.0;
+		in.pointMarkList[i]=0;
+
+//		fprintf(fp, "%d     %f     %f\n", i+1, pDstImgX[i], pDstImgY[i]);
+	}
+//	fclose(fp);
+
+	triangulate("pczAevnQP", &in, &mid, &vorout);
+
+	char szTemp[256];
+	sprintf(szTemp,"Processing %s ...",pszSrcImage);
+	progress.AddCurInfo(szTemp);
+	progress.SetRange(0,mid.numOfTriangles);
+	progress.SetPosition(0);
+	progress.SetStep(1);
+
+	for(i=0;i<mid.numOfTriangles;i++)
+	{
+		progress.StepIt();
+
+		// 采用通用接口方式
+		double *xSrcTriangle = NULL;	double *ySrcTriangle = NULL;
+		double *xDstTriangle = NULL;	double *yDstTriangle = NULL;	double *zDstTriangle = NULL;
+		int ptNum = 0;
+		ObtainTriangleCorner(mid, i, nPolytransType, pSrcImgX, pSrcImgY, pDstImgZ,
+				xSrcTriangle, ySrcTriangle, xDstTriangle, yDstTriangle, zDstTriangle, ptNum);
+		if(ptNum<=0)
+		{
+			printf("Invalid GCP count and return!\n");
+			return S_FALSE;
+		}
+		
+		TriangleFillinFst(pDEM, &srcImage,&dstImage, ptNum, xSrcTriangle,ySrcTriangle,xDstTriangle,yDstTriangle,zDstTriangle,nPolytransType,nResampleMethod);
+		
+		// 内存回收
+		if (xSrcTriangle!=NULL)
+		{
+			delete [] xSrcTriangle;		xSrcTriangle = NULL;
+		}
+		if (ySrcTriangle!=NULL)
+		{
+			delete [] ySrcTriangle;		ySrcTriangle = NULL;
+		}
+		if (xDstTriangle!=NULL)
+		{
+			delete [] xDstTriangle;		xDstTriangle = NULL;
+		}
+		if (yDstTriangle!=NULL)
+		{
+			delete [] yDstTriangle;		yDstTriangle = NULL;
+		}		
+	}
+	hRet=S_OK;
+
+	// 清理内存
+	delete [] in.pointList;
+	delete [] in.pointAttrList;
+	delete [] in.pointMarkList;
+	delete [] in.triList;
+	delete [] in.triAreaList;
+	delete [] in.triAttrList;
+	delete [] in.segmentList;
+	delete [] in.holeList;
+	delete [] in.regionList;
+	delete [] in.segMarkList;
+
+	free(mid.pointAttrList);mid.pointAttrList=NULL;
+	free(mid.pointMarkList);mid.pointMarkList=NULL;
+	free(mid.triList); mid.triList=NULL;
+	free(mid.neighborList); mid.neighborList=NULL;
+	free(mid.segmentList); mid.segmentList=NULL;
+	free(mid.segMarkList); mid.segMarkList=NULL;
+	free(mid.edgeList); mid.edgeList=NULL;
+	free(mid.edgeMarkList); mid.edgeMarkList=NULL;
+
+	free(vorout.pointList);
+	free(vorout.pointAttrList);
+	free(vorout.pointMarkList);
+	free(vorout.edgeList);
+	free(vorout.normList);
+
+	delete [] pSrcImgX; pSrcImgX=NULL;
+	delete [] pSrcImgY; pSrcImgY=NULL;
+	delete [] pDstImgX; pDstImgX=NULL;
+	delete [] pDstImgY; pDstImgY=NULL;
+	delete [] pDstImgZ;	pDstImgZ=NULL;
+
+	// 关闭DEM和源/目标影像
+	if(pDEM!=NULL)
+	{
+		pDEM->Close();
+		delete pDEM;
+		pDEM = NULL;
+	}
+	srcImage.Close();
+	dstImage.Close();
+
+	return hRet;
+}
+
+/*
+ * 根据多项式阶数初始化控制点。 [ZuoW,2010/3/8]
+ */
+void CGeometryRectify::ObtainTriangleCorner(triangulateio mid, int nTriID, int nPolytransType, double* pSrcImgX, double* pSrcImgY, double* pDstImgZ,
+		double* &dxSrcTriangle, double* &dySrcTriangle, double* &dxDstTriangle, double* &dyDstTriangle, double* &dzDstTriangle, int &ptNum)
+{
+	bool bTriExist = false;
+	bool bPtExist = false;
+	vector<int> triangleID;	// 保存triangleID的栈
+	vector<int> cornerID;	// 保存cornerID的容器
+	/*
+	 * 找出指定ID三角形周边的三角形并保存所有三角形的顶点坐标。 [ZuoW,2010/3/9]
+	 */
+	if(nTriID<0)		// 检查triangle ID.
+	{
+		printf("Invalid triangle ID and return!\n");
+		return;
+	}
+	triangleID.push_back(nTriID);	// 将当前triangle ID存入容器中 [ZuoW,2010/3/24]
+	// 将第一个三角形三个顶点存入容器中 [ZuoW,2010/3/24]
+	cornerID.push_back(mid.triList[nTriID*3+0]);
+	cornerID.push_back(mid.triList[nTriID*3+1]);
+	cornerID.push_back(mid.triList[nTriID*3+2]);
+	int ptCurNum = 3;	// 当前的GCP个数 [ZuoW,2010/3/24]
+	int ptTotalNum = (nPolytransType+1)*(nPolytransType+2)/2;	// 需要的GCP个数 [ZuoW,2010/3/24]
+
+	vector<int>::iterator triBegin = triangleID.begin();
+	vector<int>::iterator triEnd = triangleID.end();
+	vector<int>::iterator ptBegin;
+	vector<int>::iterator ptEnd;
+	while(ptCurNum<ptTotalNum)
+	{
+		while(triBegin!=triEnd)
+		{
+			int curTriID = *triBegin;
+/*			// 将当前triangle 顶点存入容器
+			for (int m=0; m<3; m++)
+			{
+				int iPtID = mid.triList[curTriID*3+m];
+				ptBegin = cornerID.begin();
+				ptEnd = cornerID.end();
+				bPtExist = false;
+
+				while(ptBegin<=ptEnd)
+				{
+					if(iPtID==*ptBegin)
+					{
+						bPtExist = true;
+						break;
+					}
+					ptBegin++;
+				}
+				if(!bPtExist)
+					cornerID.push_back(iPtID);
+			}
+*/			// 获取其相邻三角形ID和顶点ID
+			for (int i=0; i<3; i++)
+			{
+				int iNghTriID = mid.neighborList[curTriID*3+i];
+				// 检查ID是否存在
+				if(iNghTriID==-1)
+					continue;
+				vector<int>::iterator itTemp = triangleID.begin();
+				bTriExist = false;
+				for(int j=0; j<(int)(triangleID.size()); j++, itTemp++)
+				{
+					if(iNghTriID == *itTemp)
+					{
+						bTriExist = true;
+						break;
+					}
+				}
+				if (!bTriExist)	// 如果不存在就保存此邻接三角形和其顶点 [ZuoW,2010/3/24]
+				{
+					triangleID.push_back(iNghTriID);
+					// 将临近三角形的顶点存入容器中
+					for (int k=0; k<3; k++)
+					{
+						int iPtID = mid.triList[iNghTriID*3+k];
+						ptBegin = cornerID.begin();
+						ptEnd = cornerID.end();
+						bPtExist = false;
+						while(ptBegin<=ptEnd)
+						{
+							if(iPtID==*ptBegin)
+							{
+								bPtExist = true;
+								break;
+							}
+							ptBegin++;
+						}
+						if(!bPtExist)
+							cornerID.push_back(iPtID);
+					}
+				}
+			}
+
+			triBegin++;
+		}
+
+		ptCurNum = cornerID.size();
+		triBegin = triangleID.begin();
+		triEnd   = triangleID.end();
+	}
+/*	while(level<nPolytransType)
+	{
+		while(itBegin<=itEnd)
+		{
+			int curTriID = *itBegin;
+			// 将当前三角形的顶点存入容器中
+			for (int i=0; i<3; i++)
+			{
+				int iPtID = mid.triList[curTriID*3+i];
+				ptBegin = cornerID.begin();
+				ptEnd = cornerID.end();
+				// 将第一个顶点存入容器中 [ZuoW,2010/3/24]
+				if(ptBegin==ptEnd)
+				{
+					cornerID.push_back(iPtID);
+					continue;
+				}
+				bExist = false;
+				while(ptBegin<=ptEnd)
+				{
+					if(iPtID==*ptBegin)
+					{
+						bExist = true;
+						break;
+					}
+					ptBegin++;
+				}
+				if(!bExist)
+					cornerID.push_back(iPtID);
+			}
+
+			// 获取其相邻三角形ID
+			for (int i=0; i<3; i++)
+			{
+				int iNghTriID = mid.neighborList[curTriID*3+i];
+				// 检查ID是否存在
+				if(iNghTriID==-1)
+					continue;
+				// 判断是否已存在于容器中
+				vector<int>::iterator itTemp = itBegin;
+				bExist = false;
+				for(int j=0; j<triangleID.size(); j++, itTemp++)
+				{
+					if(iNghTriID == *itTemp)
+					{
+						bExist = true;
+						break;
+					}
+				}
+				if (!bExist)
+				{
+					triangleID.push_back(iNghTriID);
+					// 将临近三角形的顶点存入容器中
+					int curTriID = iNghTriID;
+					// 将三角形的顶点存入容器中
+					for (int i=0; i<3; i++)
+					{
+						int iPtID = mid.triList[curTriID*3+i];
+						ptBegin = cornerID.begin();
+						ptEnd = cornerID.end();
+						bExist = false;
+						while(ptBegin<=ptEnd)
+						{
+							if(iPtID==*ptBegin)
+							{
+								bExist = true;
+								break;
+							}
+							ptBegin++;
+						}
+						if(!bExist)
+							cornerID.push_back(iPtID);
+					}
+				}
+			}
+
+			itBegin++;
+		}
+		itEnd = triangleID.end();	//  指向新的终点
+
+		level++;
+	}
+*/
+	/*
+	 * 取出所有顶点坐标。 ［ZuoW,2010/3/9]
+	 */
+	ptNum = cornerID.size();
+	if (ptNum<3)
+	{
+		printf("Triangle corners is not enough and return!\n");
+		return;
+	}
+	dxSrcTriangle = new double[ptNum];		dySrcTriangle = new double[ptNum];
+	dxDstTriangle = new double[ptNum];		dyDstTriangle = new double[ptNum];	dzDstTriangle = new double[ptNum];
+	for(int num=0; num<ptNum; num++)
+	{
+		dxSrcTriangle[num] = dySrcTriangle[num] = dxDstTriangle[num] = dyDstTriangle[num] = dzDstTriangle[num] = -99999.0;
+	}
+
+	ptBegin = cornerID.begin();
+	ptEnd = cornerID.end();
+	for(int num=0;num<ptNum;num++)
+	{
+		int pointID = cornerID.at(num);
+		dxDstTriangle[num] = mid.pointList[pointID*2+0];
+		dyDstTriangle[num] = mid.pointList[pointID*2+1];
+		dzDstTriangle[num] = pDstImgZ[pointID];
+		dxSrcTriangle[num] = pSrcImgX[pointID];
+		dySrcTriangle[num] = pSrcImgY[pointID];
+	}
 }
 
 BOOL CGeometryRectify::CalcPolyTransPara(double *pSrcX, double *pSrcY,
@@ -1142,7 +1634,8 @@ void CGeometryRectify::dldltban1(double* a, double* d, double* l, int n, int wid
 }
 
 void CGeometryRectify::dldltban2(double* l, double* d, double* b, double* x,
-		int n, int wide) {
+		int n, int wide) 
+{
 	int i, j, kk, m;
 	double *bo, *lo, *xx;
 	double *bb, *bbo;
@@ -1433,8 +1926,132 @@ BOOL VectorRaster(int x0,int y0,double z0,int x1,int y1,double z1,CFArray<int>& 
 
 void CGeometryRectify::TriangleFillinFst(CImage* pSrcImage, CImage* pDstImage,
 		double *pSrcTriangleX, double *pSrcTriangleY, double *pDstTriangleX,
-		double *pDstTriangleY, UINT nResampleMethod) 
+		double *pDstTriangleY, UINT nResampleMethod)
 {
+	if (pSrcImage==NULL||pDstImage==NULL)
+	{
+		return;
+	}
+
+	// 三角形顶点坐标
+	int x[3], y[3];
+	int i=0;
+	for (i=0; i<3; i++)
+	{
+		x[i]=(int)(pDstTriangleX[i]+0.5);
+		y[i]=(int)(pDstTriangleY[i]+0.5);
+	}
+
+	// 保存三角形左右起止像素坐标
+	CFArray<int> rasterx, rastery;
+	for (i=0; i<3; i++)
+	{
+		VectorRaster(x[i], y[i], x[(i+1)%3], y[(i+1)%3], rasterx, rastery);
+	}
+
+	int nPtNum=rasterx.GetSize();
+	for (i=0; i<3; i++)
+	{
+		if ((y[(i-1+3)%3]-y[i])*(y[(i+1)%3]-y[i])<=0)
+		{
+			for (int j=0; j<nPtNum; j++)
+			{
+				if (rasterx[j]==x[i]&&rastery[j]==y[i])
+				{
+					rasterx.RemoveAt(j);
+					rastery.RemoveAt(j);
+
+					nPtNum=rasterx.GetSize();
+					break;
+				}
+			}
+		}
+	}
+
+	nPtNum=rasterx.GetSize();
+	int* indextemp=new int[nPtNum];
+
+	for (i=0; i<nPtNum; i++)
+	{
+		indextemp[i]=i;
+	}
+	comprasterx=&rasterx;
+	comprastery=&rastery;
+	qsort((void*)indextemp, nPtNum, sizeof(int), TriangleCompare);
+	CFArray<int> index;
+	for (i=0; i<nPtNum; i++)
+	{
+		index.Add(indextemp[i]);
+	}
+	delete [] indextemp;
+	indextemp=NULL;
+
+	nPtNum=index.GetSize();
+	CFArray<int> rasterlx;
+	CFArray<int> rasterly;
+	CFArray<int> rasterrx;
+	CFArray<int> rasterry;
+	for (i=0; i<nPtNum/2; i++)
+	{
+		int x0=rasterx[index[i*2+0]];
+		int y0=rastery[index[i*2+0]];
+		int x1=rasterx[index[i*2+1]];
+		int y1=rastery[index[i*2+1]];
+		if (x0<x1)
+		{
+			rasterlx.Add(x0);
+			rasterly.Add(y0);
+			rasterrx.Add(x1);
+			rasterry.Add(y1);
+		}
+		else
+		{
+			rasterlx.Add(x1);
+			rasterly.Add(y1);
+			rasterrx.Add(x0);
+			rasterry.Add(y0);
+		}
+	}
+
+	// 计算转换系数
+	double Error=0;
+	CalcPolyTransPara(pDstTriangleX, pDstTriangleY, pSrcTriangleX,
+			pSrcTriangleY, CONST_NUM, PT_LINEAR, &Error);	// 3 -> 6
+
+	// Print the coef. [ZuoW, 11/12/2009]
+	printf("X coef.:%f, %f, %f\n", m_pCoeX[0], m_pCoeX[1], m_pCoeX[2]);
+	printf("Y coef.:%f, %f, %f\n", m_pCoeY[0], m_pCoeY[1], m_pCoeY[2]);
+
+	int nBPP;
+	pSrcImage->GetBPP(&nBPP);
+	BYTE* pPixel=new BYTE[nBPP];
+	double xsrc, ysrc, xdst, ydst;
+	for (i=0; i<nPtNum/2; i++)
+	{
+		ydst=rasterly[i];
+		for (int j=rasterlx[i]; j<=rasterrx[i]; j++)
+		{
+			xdst=j;
+			PolyTrans(xdst, ydst, &xsrc, &ysrc);
+			memset(pPixel, 0, nBPP);
+			// 反推法，通过在源影像上重采样实现。 [ZuoW, 2009/11/17]
+			pSrcImage->GetPixelF((float)xsrc, (float)ysrc, pPixel,
+					nResampleMethod);
+			pDstImage->SetPixel(ydst, xdst, pPixel);
+		}
+	}
+
+	delete [] pPixel;
+	return;
+}
+
+void CGeometryRectify::TriangleFillinFst(CDEM* pDEM, CImage* pSrcImage, CImage* pDstImage,
+		int nPointNum, double *pSrcTriangleX, double *pSrcTriangleY, double *pDstTriangleX,
+		double *pDstTriangleY, double* pDstTriangleZ, UINT nPolytransType, UINT nResampleMethod)		// 添加了多项式阶数 [ZuoW,2010/5/18]
+{
+	int ptNum = nPointNum;		// 传入的GCP个数。 [ZuoW,2010/3/10]
+	m_transType = (PolytransType)nPolytransType;
+
 	if (pSrcImage==NULL||pDstImage==NULL) 
 	{
 		return;
@@ -1520,12 +2137,69 @@ void CGeometryRectify::TriangleFillinFst(CImage* pSrcImage, CImage* pDstImage,
 		}
 	}
 
-	//����Ŀ������ε�Դ����εı任����ʽ
+	// 计算多项式转换系数
+	/// 如果根据GCP个数来确定多项式阶数，那么结果影像中畸变不统一，还是使用统一的阶数。 [ZuoW,2010/3/24]
 	double Error=0;
-	CalcPolyTransPara(pDstTriangleX, pDstTriangleY, pSrcTriangleX,
-			pSrcTriangleY, CONST_NUM, PT_LINEAR, &Error);	// 3 -> 6
+	if(ptNum<3)		// 安全性检查 [ZuoW,2010/3/24]
+	{
+		printf("Invalid GCP count and return!\n");
+		return;
+	}
+	else if(ptNum<(m_transType+1)*(m_transType+2)/2)
+	{
+		printf("Not enough GCP and reset the transfer type!\n");
+		m_transType = PT_LINEAR;
+	}
+	
+	double dstLBX, dstLBY, dstCell;
+	if(m_transType == PT_CUBE_Z)	/// 加入高程计算多项式系数(可以考虑将这几个变换类型进行集成) [ZuoW,2010/5/18]
+	{
+		// 获取目标影像坐标信息 [ZuoW,2010/5/19]
+		pDstImage->GetGrdInfo(&dstLBX, &dstLBY, &dstCell);
 
-	// Print the coef. [ZuoW, 11/12/2009]
+		// 获取高程 [ZuoW,2010/5/18]
+		for(i=0; i<ptNum; i++)
+		{
+			// 首先将行列号转换为地理坐标 [ZuoW,2010/5/19]
+			pDstTriangleX[i] = dstLBX + pDstTriangleX[i]*dstCell;
+			pDstTriangleY[i] = dstLBY + pDstTriangleY[i]*dstCell;
+
+			if(fabs(pDstTriangleZ[i]-INVALID_ALTITUDE)<1e-5)
+				pDEM->GetAverageAltitude(&(pDstTriangleZ[i]));
+
+			printf("The %dth GCP's coordination:%lf, %lf, %lf, %lf, %lf\n", i+1,
+					pDstTriangleX[i], pDstTriangleY[i], pDstTriangleZ[i], pSrcTriangleX[i], pSrcTriangleY[i]);
+		}
+
+
+		CalcPolyZTransPara(pDstTriangleX, pDstTriangleY, pDstTriangleZ,
+				pSrcTriangleX, pSrcTriangleY, ptNum, nPolytransType, &Error);
+
+	}
+	else
+		CalcPolyTransPara(pDstTriangleX, pDstTriangleY, pSrcTriangleX,
+			pSrcTriangleY, ptNum, m_transType, &Error);
+
+	// Print the coef. [ZuoW, 2009/12/11]
+/*	FILE* fp = fopen("/dps/workdir/CCD2/LEVEL3/376/Coef.txt", "a+");
+	if(fp!=NULL)
+	{
+		for(int num=0; num<ptNum; num++)
+		{
+			fprintf(fp, "%dth point:%lf, %lf, %lf, %lf\n", num+1,
+					pSrcTriangleX[num], pSrcTriangleY[num], pDstTriangleX[num], pDstTriangleY[num]);
+		}
+		fprintf(fp, "The coef. are:\n");
+		for(int num=0; num<15; num++)
+		{
+			fprintf(fp, "%8.5e, %8.5e\n", m_pCoeX[num], m_pCoeY[num]);
+		}
+		fprintf(fp, "\n");
+		fprintf(fp, "\n");
+		fprintf(fp, "\n");
+		fclose(fp);
+	}
+*/
 	printf("X coef.:%f, %f, %f\n", m_pCoeX[0], m_pCoeX[1], m_pCoeX[2]);
 	printf("Y coef.:%f, %f, %f\n", m_pCoeY[0], m_pCoeY[1], m_pCoeY[2]);
 
@@ -1539,17 +2213,32 @@ void CGeometryRectify::TriangleFillinFst(CImage* pSrcImage, CImage* pDstImage,
 		ydst=rasterly[i];
 		for (int j=rasterlx[i]; j<=rasterrx[i]; j++) 
 		{
-			xdst=j;
-			PolyTrans(xdst, ydst, &xsrc, &ysrc);
+			xdst = j;
+			if(m_transType == PT_CUBE_Z)
+			{
+				double X, Y, Z;
+				X = dstLBX + dstCell*xdst;
+				Y = dstLBY + dstCell*ydst;
+
+				pDEM->GetAltitude(X, Y, &Z, 0);
+				if(fabs(Z-INVALID_ALTITUDE)<1e-5)
+					pDEM->GetAverageAltitude(&Z);
+
+				PolyTransZ(X, Y, Z, &xsrc, &ysrc);
+			}
+			else
+			{
+				PolyTrans(xdst, ydst, &xsrc, &ysrc);
+			}
 			memset(pPixel, 0, nBPP);
-			// 反推法，通过在源影像上重采样实现。 [ZuoW, 2009/11/17]
+			// NearestNeighbour in the triangle and Bilinear on the borderline. [ZuoW, 2009/11/17]
 			pSrcImage->GetPixelF((float)xsrc, (float)ysrc, pPixel,
 					nResampleMethod);
 			pDstImage->SetPixel(ydst, xdst, pPixel);
 		}
 	}
 
-	delete [] pPixel;
+	delete [] pPixel;	pPixel = NULL;
 	return;
 }
 
@@ -2133,7 +2822,7 @@ HRESULT CGeometryRectify::OrthoRectifyRPC(char* pszSrcImage,
 				}
 				if(bValidTri)
 				{
-					TriangleFillinFst(&srcImage,&dstImage,xSrcTriangle,ySrcTriangle,xDstTriangle,yDstTriangle,nResampleMethod);
+//					TriangleFillinFst(&srcImage,&dstImage,xSrcTriangle,ySrcTriangle,xDstTriangle,yDstTriangle,nResampleMethod);
 				}
 			}
 
@@ -2368,7 +3057,7 @@ HRESULT CGeometryRectify::OrthoRectifyHJCCD2(double* pIX, double* pIY,
 		return S_FALSE;
 	}
 	double lfAverageAltitude=0;
-	pDEM->GetAverageAltitude(&lfAverageAltitude);		// Get the all grids' average  altitude. [WeiZ,4/21/2009]
+	pDEM->GetAverageAltitude(&lfAverageAltitude);		// Get the all grids' average  altitude. [ZuoW,2009/4/21]
 
 	CImage image;
 	hRes=image.Open(pszL1Image,modeRead);
@@ -2395,9 +3084,9 @@ HRESULT CGeometryRectify::OrthoRectifyHJCCD2(double* pIX, double* pIY,
 	 pGX,pGY,pGZ,
 	 nGcpNum,
 	 //PT_SQUARE,
-	 nPolytransType,		// PT_CUBE --> nPolytransType [WeiZ,5/10/2009]
+	 nPolytransType,
 	 //PT_LINEAR,
-	 1,
+	 0,			// 1 --> 0
 	 0,0,0,0,
 	 lfGSD,
 	 pL4ImgRgnX,pL4ImgRgnY,
@@ -2604,3 +3293,335 @@ void CGeometryRectify::de_aberration(double *x, int ifconverse) {
 	//printf("target is %15.6f\n", *x);
 	//printf("target is %15.6f\n", *x);
 }
+
+/*
+* 结合多项式和共线方程进行正射校正 [ZuoW,2010/4/27]
+*/
+HRESULT CGeometryRectify::reOrthoRectifyHJCCD(double* pIX, double* pIY, double* pGX, double* pGY, double* pGZ, int nGcpNum,
+											char* pszAuxFile, char* pszEphFile, char* pszAttFile, char* pszCamFile,
+											char* pszDEMFile, char* pszSrcImage, char* pszDstImage,
+											double* pMatchBandParam, UINT nPolytransType, UINT nResampleMethod)
+{
+	int nDstRow, nDstCol;	// 目标影像的行/列号
+	double dOrientation[12] = {0};		// 外方位元素(X, Y, Z, Phi, Omega, Kappa)
+	HRESULT hRes;
+
+	//////////////////////////////////////////////////
+	// 解析源影像并计算目标影像范围 [ZuoW,2010/4/27]
+	//////////////////////////////////////////////////
+	// 打开源影像
+	CImage srcImage;
+	if(srcImage.Open(pszSrcImage,modeRead)!=S_OK)
+	{
+		COutput::OutputFileOpenFailed(pszSrcImage);
+
+		return S_FALSE;
+	}
+
+	int nSrcRow,nSrcCol;		// 源影像行/列号
+	srcImage.GetRows(&nSrcRow);
+	srcImage.GetCols(&nSrcCol);
+	int nBandNum;
+	srcImage.GetBandNum(&nBandNum);
+	UINT datatype;
+	srcImage.GetDataType(&datatype);
+	int nBPB;
+	srcImage.GetBPB(&nBPB);
+	if(nSrcCol*nSrcRow*nBPB<=0)		// 影像参数检查
+	{
+		printf("Invalid image and return!\n");
+		return S_FALSE;
+	}
+	double dLBX, dLBY, dCell;
+	srcImage.GetGrdInfo(&dLBX, &dLBY, &dCell);	
+	// 计算目标影像范围
+	double outputLBX, outputLBY, outputRTX, outputRTY, outputGSD;
+	outputLBX = outputLBY = outputRTX = outputRTY = 0.0;
+	outputGSD = dCell;
+	if(fabs(outputRTY-outputLBY)<1e-6||fabs(outputRTX-outputLBX)<1e-6)
+	{
+		double X0,Y0,X1,Y1,X2,Y2,X3,Y3;
+		double Error;
+		double inLBX=0.0f;
+		double inLBY=0.0f;
+		double inRTX=nSrcCol-1;
+		double inRTY=nSrcRow-1;
+		printf("inLBX is %lf,inLBY is %lf,inRTX is %lf ,inRTY is %lf\n",inLBX,inLBY,inRTX,inRTY);
+		InitPolyTransMatrix(pIX,pIY,pGX,pGY,nGcpNum,&Error,nPolytransType);
+		PolyTrans(inLBX,inLBY,&X0,&Y0);
+		PolyTrans(inLBX,inRTY,&X1,&Y1);
+		PolyTrans(inRTX,inRTY,&X2,&Y2);
+		PolyTrans(inRTX,inLBY,&X3,&Y3);
+
+		outputLBX=__min(__min(X0,X1),__min(X2,X3));
+		outputLBY=__min(__min(Y0,Y1),__min(Y2,Y3));
+		outputRTX=__max(__max(X0,X1),__max(X2,X3));
+		outputRTY=__max(__max(Y0,Y1),__max(Y2,Y3));
+	}
+	// 目标影像行/列号
+	nDstRow=abs(int((outputRTY-outputLBY)/outputGSD+0.5));
+	nDstCol=abs(int((outputRTX-outputLBX)/outputGSD+0.5));
+
+	//////////////////////////////////////////////////
+	// Test [ZuoW,2010/6/3]
+//	nDstRow = 13736;	nDstCol = 16018;
+//	outputLBX = 370857.9787;					outputRTY = 4195600.0573;
+//	outputRTX = outputLBX+(nDstCol-1)*outputGSD;	outputLBY = outputRTY-(nDstRow-1)*outputGSD;
+	//////////////////////////////////////////////////
+
+	// 如果控制点像素坐标是左下角就转换为左上角坐标 [ZuoW,2010/7/4]
+#ifdef IMAGE_LD
+	for(int i=0; i<nGcpNum; i++)
+	{
+		pIY[i] = nSrcRow - pIY[i];
+	}
+#endif
+
+	//////////////////////////////////////////////////////////////////////////
+	// 初始化传感器参数并进行计算外方位元素 [ZuoW,2010/4/28]
+	//////////////////////////////////////////////////////////////////////////
+	// 初始化CDimap 
+	CDimap dimap;
+	hRes=dimap.Initialize(pszAuxFile,pszEphFile,pszAttFile,pszCamFile);
+	if(hRes==S_FALSE)
+	{
+		srcImage.Close();
+
+		return S_FALSE;
+	}
+	// 初始化外方位元素
+	dOrientation[0] = dLBX;		// + ((nSrcCol+1)/2)*dCell;
+	dOrientation[1] = dLBY;		// + ((nSrcRow+1)/2)*dCell;
+	dOrientation[2] = dCell;
+	dOrientation[3] = nSrcCol;	// 
+	dOrientation[4] = nSrcRow;	//
+	// 迭代计算外方位元素
+	dimap.InteriavteOrientation(pIX, pIY, pGX, pGY, pGZ, nGcpNum, dOrientation);
+	
+	/////////////////////////////////////////////////////////////////////////////
+	// 打开DEM影像数据
+	/////////////////////////////////////////////////////////////////////////////
+#ifdef DEBUG
+/*	CImage* pDEM = new CImage();
+	if(pDEM->Open(pszDEMFile, modeRead)!=S_OK)
+	{
+		COutput::OutputFileOpenFailed(pszSrcImage);
+		return S_FALSE;
+	}
+	int demRow, demCol, demBPB;
+	double demLBX, demLBY, demCell;
+	pDEM->GetRows(&demRow);
+	pDEM->GetCols(&demCol);
+	pDEM->GetBPB(&demBPB);
+	pDEM->GetGrdInfo(&demLBX, &demLBY, &demCell);
+	BYTE* demValue = new BYTE[demBPB];
+#else
+*/
+	CDEM* pDEM=new CNSDTFDEM;
+	hRes=pDEM->Open(pszDEMFile,0,modeRead);
+	if(hRes==S_FALSE)
+	{
+		COutput::OutputFileOpenFailed(pszDEMFile);
+		return S_FALSE;
+	}
+#endif
+	/////////////////////////////////////////////////////////////////////////////
+	// 纠正影像
+	/////////////////////////////////////////////////////////////////////////////
+	CImage dstImage;
+	if(dstImage.CreateImg(pszDstImage, modeCreate|modeWrite,
+					nDstCol, nDstRow, datatype, nBandNum, BSQ,
+					outputLBX, outputLBY, outputGSD)!=S_OK)
+	{
+		COutput::OutputFileOpenFailed(pszDstImage);
+		return S_FALSE;
+	}
+	
+	double dCamCoef[6] = {0};
+	hRes = dimap.GetCamCoef(dCamCoef);
+	if(hRes!=S_OK)
+	{
+		printf("Get camera coef. failed!\n");
+		return S_FALSE;
+	}
+	double dFocus = dCamCoef[0];
+	double dCCDLength = dCamCoef[1];
+
+	int nBPP;
+	srcImage.GetBPP(&nBPP);
+	BYTE* pPixel = new BYTE[nBPP];
+	double srcx, srcy;
+	double  dstx, dsty, dstz;
+	// 左上角坐标系
+	int i,j;
+	double tmpX,tmpY;
+	for(i=0; i<nDstRow; i++)
+	{
+		for(j=0; j<nDstCol; j++)
+		{
+			double  dTemp1, dTemp2, dTemp3;
+			dTemp1 = dTemp2 = dTemp3 = 0.0;
+			dstx = outputLBX+j*outputGSD;
+			dsty = outputLBY+(nDstRow-i-1)*outputGSD;
+#ifdef DEBUG
+/*			float dstIX = (dstx-demLBX)/demCell;
+			float dstIY = (dsty-demLBY)/demCell;
+			memset(demValue, 0, demBPB);
+			pDEM->GetPixelF(dstIX, dstIY, demValue, 0);
+			dstz = *((short*)(demValue));		/// DEM影像宽
+#else
+*/
+			pDEM->GetAltitude(dstx, dsty, &dstz, 0);
+			if(dstz<0)		// 海平面以下的都赋值为0(防止出现非法DEM值导致获取原始影像行列号错误) [ZuoW,2010/7/12]
+				dstz = 0;
+#endif
+
+#ifdef APFLOAT
+
+			CalDstCoordiantion(dstx, dsty, dstz, dOrientation, dFocus, dCCDLength, srcx, srcy);
+
+#else
+			dTemp1 = (dstx-dOrientation[0]);
+			dTemp2 = (dsty-dOrientation[1]);
+			dTemp3 = (dstz-dOrientation[2]);
+			srcx = (dOrientation[3]*dTemp1+dOrientation[6]*dTemp2+dOrientation[9]*dTemp3);
+			srcx /= (dOrientation[5]*dTemp1+dOrientation[8]*dTemp2+dOrientation[11]*dTemp3);
+			srcx *= (-dFocus/dCCDLength);
+			srcy = (dOrientation[4]*dTemp1+dOrientation[7]*dTemp2+dOrientation[10]*dTemp3);
+			srcy /= (dOrientation[5]*dTemp1+dOrientation[8]*dTemp2+dOrientation[11]*dTemp3);
+			srcy *= (-dFocus/dCCDLength);
+#endif
+			// 从框标坐标系转换到左上角坐标系
+			srcx += (nDstCol+1)/2;
+			srcy += (nDstRow+1)/2;
+			
+			if(i>0&&j>0)
+			{
+				int a = abs((int)(srcx)-(int)(tmpX));
+//				int b = abs(srcy-tmpY);
+				if(a<1)
+					printf("%d,%d, %f, %f, %f, %f\n",i, j, (double)srcx, (double)srcy, (double)tmpX, (double)tmpY);
+			}
+			tmpX = srcx;
+			tmpY = srcy;
+
+			memset(pPixel, 0, nBPP);	// 保存像素灰度
+			srcImage.GetPixelF((float)srcx, (float)(nSrcRow-srcy), pPixel, nResampleMethod);
+			dstImage.SetPixel(nDstRow-i-1, j, pPixel);
+		}
+	}	
+
+	// 内存清理
+#ifdef DEBUG
+//	delete [] demValue;
+//	demValue = NULL;
+#endif
+
+	pDEM->Close();
+	delete pDEM;
+	pDEM = NULL;
+
+	srcImage.Close();
+	dstImage.Close();
+
+	if (pPixel!=NULL)
+	{
+		delete [] pPixel;
+		pPixel = NULL;
+	}
+	
+	return S_OK;
+}
+										  
+/*
+* 将原始控制点(L2)投影到L3级影像上(左下角坐标系) [ZuoW,2010/5/4]
+*/
+void CGeometryRectify::ProjectGCPL3(double* &pIX, double* &pIY, double* pGX, double* pGY, double* pGZ, 
+									int nGcpNum, CImage* pSrcImage)
+{
+	double dLBX, dLBY, dGSD;
+	int nSrcCol, nSrcRow;
+	if(pSrcImage==NULL)
+	{
+		printf("Invalid image!\n");
+		return;
+	}
+	
+	HRESULT hRes = pSrcImage->GetGrdInfo(&dLBX, &dLBY, &dGSD);
+	if(hRes!=S_OK)
+	{
+		printf("Invalid image!\n");
+		return;
+	}
+	pSrcImage->GetCols(&nSrcCol);
+	pSrcImage->GetRows(&nSrcRow);
+	
+	for(int i=0; i<nGcpNum; i++)
+	{	
+		pIX[i] = (pGX[i]-dLBX)/dGSD+1;
+		pIY[i] = (pGY[i]-dLBY)/dGSD+1;
+		if(pIX[i]<1)	pIX[i] = 1;
+		else if(pIX[i]>nSrcCol)		pIX[i] = nSrcCol;
+		
+		if(pIY[i]<1)	pIY[i] = 1;
+		else if(pIY[i]>nSrcCol) pIY[i] = nSrcRow;
+	}
+	
+	return;
+}
+
+void CGeometryRectify::CalDstCoordiantion(double dstx, double dsty, double dstz, double dOrientation[12],
+		double dFocus, double dCCDLength, double& srcx, double& srcy)
+{
+	apfloat tmpx = dstx;
+	apfloat tmpy = dsty;
+	apfloat tmpz = dstz;
+	apfloat tmp1 = dOrientation[0];
+	apfloat tmp2 = dOrientation[1];
+	apfloat tmp3 = dOrientation[2];
+
+	tmpx = tmpx - tmp1;
+	tmpy = tmpy - tmp2;
+	tmpz = tmpz - tmp3;
+
+	tmp1 = dOrientation[3];
+	tmp2 = dOrientation[6];
+	tmp3 = dOrientation[9];
+
+	apfloat x = tmp1*tmpx + tmp2*tmpy + tmp3*tmpz;
+	tmp1 = dOrientation[5];
+	tmp2 = dOrientation[8];
+	tmp3 = dOrientation[11];
+	x /= (tmp1*tmpx + tmp2*tmpx + tmp3*tmpz);
+	tmp1 = dFocus;
+	tmp2 = dCCDLength;
+	x *= (-tmp1/tmp2);
+
+	tmp1 = dOrientation[4];
+	tmp2 = dOrientation[7];
+	tmp3 = dOrientation[10];
+	apfloat y = tmp1*tmpx+tmp2*tmpy+tmp3*tmpz;
+	tmp1 = dOrientation[5];
+	tmp2 = dOrientation[8];
+	tmp3 = dOrientation[11];
+	y /= (tmp1*tmpx + tmp2*tmpx + tmp3*tmpz);
+	tmp1 = dFocus;
+	tmp2 = dCCDLength;
+	y *= (-tmp1/tmp2);
+
+//	cout << x << endl;
+//	cout << y << endl;
+
+	srcx = ap2double(x.ap);
+	srcy = ap2double(y.ap);
+
+//	cout << srcx << endl;
+//	cout << srcy << endl;
+
+	return;
+}
+
+
+
+
+										   

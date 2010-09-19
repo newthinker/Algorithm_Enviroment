@@ -1,4 +1,4 @@
-// GeometryRectify.h: interface for the CGeometryRectify class.
+﻿// GeometryRectify.h: interface for the CGeometryRectify class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include "Kernel.h"
+#include "Triangle.h"
 #define CONST_NUM		3		// 3 points or 6. [ZuoW, 11/9/2009]
 
 typedef enum _POLYTRANSTYPE
@@ -33,6 +34,9 @@ typedef struct tagRGBQUAD
 class CGeometryRectify  
 {
 public:
+	CGeometryRectify();
+	virtual ~CGeometryRectify();
+
 	HRESULT OrthoRectifyHJCCD(char* pszAuxFile,char* pszEphFile,char* pszAttFile,char* pszCamFile,double* pIX,double* pIY,
 										   double* PGX,double* pGY,double* pGZ,int nGcpNum,
 										   char* pszDEMFile,char* pszL1Image,char* pszL4Image,double lfGSD,
@@ -41,18 +45,22 @@ public:
 	HRESULT OrthoRectifyHJCCD2(double* pIX, double* pIY, double* PGX,double* pGY,double* pGZ,int nGcpNum,
 			                               char* pszDEMFile,char* pszL1Image,char* pszL4Image,double lfGSD,
 			                               double* pL4ImgRgnX,double* pL4ImgRgnY,double * pMatchBandParam=NULL, UINT nPolytransType=1);
-	
-	CGeometryRectify();
-	virtual ~CGeometryRectify();
-	
+	// 结合多项式和共线方程进行正射校正 [ZuoW,2010/4/27]
+	HRESULT reOrthoRectifyHJCCD(double* pIX, double* pIY, double* pGX, double* pGY, double* pGZ, int nGcpNum,
+								char* pszAuxFile, char* pszEphFile, char* pszAttFile, char* pszCamFile,
+								char* pszDEMFile, char* pszSrcImage, char* pszDstImage,
+                                double* pMatchBandParam=NULL, UINT nPolytransType=1, UINT nResampleMethod=1);
+
 	//add by dy  20081027 for add inparam pMatchBandParam for MatchBand begin
 	HRESULT ImagePolyRectify(char* pszSrcImage,char* pszDstImage,double* pSrcX,double* pSrcY,double* pDstX,double* pDstY,int  nPtNum,UINT nPolytransType,UINT nResampleMethod,double outputLBX,double outputLBY,double outputRTX,double outputRTY,double outputGSD,double* pDstImgRgnX,double* pDstImgRgnY,double * pMatchBandParam=NULL);
 	
 	//add by dy  20081027 for add inparam pMatchBandParam for MatchBand begin
 	HRESULT ImagePolyZRectify(CDEM* pDem, char* pszSrcImage,char* pszDstImage,double* pSrcX,double* pSrcY,double* pDstX,double* pDstY, double* pDstZ, int  nPtNum,UINT nPolytransType,UINT nResampleMethod,double outputLBX,double outputLBY,double outputRTX,double outputRTY,double outputGSD,double* pDstImgRgnX,double* pDstImgRgnY,double * pMatchBandParam=NULL);
-		
-	//add by dy  20081027 for add inparam  pMatchBandParam for MatchBand end
+
+	// 三角网纠正 [ZuoW,2010/7/7]
 	HRESULT ImageTinRectify(char* pszSrcImage,char* pszDstImage,double* pSrcX,double* pSrcY,double* pDstX,double* pDstY,int  nPtNum,UINT nPolyType, UINT nResampleMethod,double outputLBX,double outputLBY,double outputRTX,double outputRTY,double outputGSD);
+	HRESULT ImageTinRectify(char* pszSrcImage,char* pszDstImage, char* szDEMFile, double* pSrcX,double* pSrcY,double* pDstX, double* pDstY, double* pDstZ,int  nPtNum,UINT nPolyType, UINT nResampleMethod,double outputLBX,double outputLBY,double outputRTX,double outputRTY,double outputGSD);
+
 	HRESULT OrthoRectifyRPC(char* pszSrcImage,char* pszSrcRPC,char* pszSrcDEM,double* pGCPX,double* pGCPY,double* pGCPZ,double* pGCPIX,double* pGCPIY,int nGCPNum,char* pszDstImage,double outputLBX,double outputLBY,double outputRTX,double outputRTY,double OutputGSD,UINT nResampleMethod,CProjection* pProjection);
 	
 	HRESULT InitPolyTransMatrix(double* pSrcX,double* pSrcY,double* pDstX,double* pDstY,int nPtNum,double* pError,UINT nPolytransType);
@@ -60,10 +68,20 @@ public:
 	HRESULT PolyTransZ(double SrcX,double SrcY,double SrcZ, double* pDstX,double* pDstY);
 	
 	HRESULT ProjectImageRPC(char* pszImage,char* pszRPC,CDEM* pDEM,double* pGCPX,double* pGCPY,double* pGCPZ,double* pGCPIX,double* pGCPIY,int nGCPNum,double* pLBX,double* pLBY,double* pRTX,double* pRTY,CProjection* pProjection);
+
+	// 将控制点投影到L3影像上 [ZuoW,2010/5/4]
+	void ProjectGCPL3(double* &pIX, double* &pIY, double* pGX, double* pGY, double* pGZ,
+									int nGcpNum, CImage* pSrcImage);
+
 private:
 	void CovertFromWGS84(CProjection* pProjectionWGS84,CProjection *pProjection,double X84, double Y84, double Z84,double *pX, double *pY, double *pZ);
 	void Convert2WGS84(CProjection* pProjection,CProjection* pProjectionWGS84,double X,double Y,double Z,double* pWGS84X,double* pWGS84Y,double* pWGS84Z);
+	// 三角形像素纠正填充
 	void TriangleFillinFst(CImage* pSrcImage,CImage* pDstImage,double* pSrcTriangleX,double* pSrcTriangleY,double* pDstTriangleX,double* pDstTriangleY,UINT nResampleMethod);
+	// 加入了DEM，融合了带高程的多项式纠正算法 [ZuoW,2010/7/7]
+	void TriangleFillinFst(CDEM* pDEM, CImage* pSrcImage, CImage* pDstImage, int nPointNum,
+			double *pSrcTriangleX, double *pSrcTriangleY, double *pDstTriangleX,
+			double *pDstTriangleY, double* pDstTriangleZ, UINT nPolytransType, UINT nResampleMethod);
 	void RectangleFillin(CImage* pSrcImage,CImage* pDstImage,double* pSrcRectangleX,double* pSrcRectangleY,double* pDstRectangleX,double* pDstRectangleY,UINT nResampleMethod);
 	BOOL CalcPolyTransPara(double* pSrcX,double* pSrcY,double* pDstX,double* pDstY,int nPtNum,UINT nPolytransType,double* pError);
 	BOOL CalcPolyZTransPara(double* pSrcX,double* pSrcY, double *pSrcZ, double* pDstX, double* pDstY,int nPtNum,UINT nPolytransType,double* pError);
@@ -73,6 +91,11 @@ private:
 	void dldltban1 (double* a,double* d,double* l,int n,int wide);
 	void dldltban2 (double* l,double* d,double* b,double* x,int n,int wide);
 	void de_aberration(double *x,int ifconverse);   //0 de_aberration 1 de_converse_aberration
+	// 根据多项式阶数初始化控制点。 [ZuoW,2010/3/8]
+	void ObtainTriangleCorner(triangulateio mid, int nTriID, int nPolytransType, double* pSrcImgX, double* pSrcImgY, double* pDstImgZ,
+			double* &dxSrcTriangle, double* &ySrcTriangle, double* &dxDstTriangle, double* &dyDstTriangle, double* &dzDstTriangle, int &ptNum);
+	// 使用APFloat库进行精确计算源影像坐标 [ZuoW,2010/6/2]
+	void CalDstCoordiantion(double dstx, double dsty, double dstz, double dOrientation[12], double dFocus, double dCCDLength, double& srcx, double& srcy);
 private:
 	PolytransType m_transType;
 	double m_pCoeX[15], m_pCoeY[15];

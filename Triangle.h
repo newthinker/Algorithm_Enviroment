@@ -263,7 +263,7 @@ struct triangulateio {
   int numOfPoints;                                            /* In / out */
   int numOfPointAttrs;                                   /* In / out */
 
-  int *triList;                                             /* In / out */	//  Point list of a triangle. [ZuoW,2010/3/8]
+  int *triList;                                             /* In / out */
   REAL *triAttrList;                                   /* In / out */
   REAL *triAreaList;                                         /* In only */
   int *neighborList;                                             /* Out only */

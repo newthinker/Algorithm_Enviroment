@@ -65,6 +65,15 @@
 #define __max(a,b)  (((a) > (b)) ? (a) : (b))
 #endif
 
+// 大小字节序判断 [ZuoW,2010/3/6]
+const int endian = 1;
+#define is_bigendian()  ((*(char*)&endian)==0)
+#define is_littlendian() ((*(char*)&endian)==1)
+#define LITTLENDIAN		1
+
+#define	DEBUG		// debug标示 [ZuoW,2010/5/11]
+#define		IMAGE_LD	// GCP像素坐标是左下角 [ZuoW,2010/7/4]
+//#define APFLOAT		// 使用APFloat库进行精确计算 [ZuoW,2010/6/2]
 
 //add by dy 20080925 for DE_ABERRATION define begin
 /*

@@ -206,6 +206,7 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
 		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
+//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
 		double X,Y,Coef;
 		hRes=PatternMatch.PatternMatch(pImageBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
 											pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
@@ -302,6 +303,7 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
 		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
+//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
 		printf("%s\n", strGcpFiles[i]);
 		
 		double X,Y,Coef;
@@ -441,6 +443,7 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
 		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
+//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
 		double X,Y,Coef;
 		hRes=PatternMatch.PatternMatch(pImageBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
 											pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
