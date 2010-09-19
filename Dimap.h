@@ -1,4 +1,4 @@
-ï»¿// Dimap.h: interface for the CDimap class.
+// Dimap.h: interface for the CDimap class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,6 @@ class CDimap
 		HJ1A,
 		HJ1B
 	}SATELLITEID;
-
 	typedef enum
 	{
 		HJ1A_CCD1	=	0,
@@ -97,8 +96,8 @@ class CDimap
 
 	typedef struct _tagEphemeris
 	{
-		CRealVector P;//Î»ï¿½ï¿½
-		CRealVector V;//ï¿½Ù¶ï¿½
+		CRealVector P;//Î»ÖÃ
+		CRealVector V;//ËÙ¶È
 		double t;
 	}Ephemeris;
 
@@ -111,23 +110,17 @@ class CDimap
 	}Attitude;
 
 public:
+	HRESULT Image2Map(int nRow, int nCol, double fHeight, double *pGX, double *pGY);
 	CDimap();
 	virtual ~CDimap();
-	
-	HRESULT Image2Map(int nRow, int nCol, double fHeight, double *pGX, double *pGY);
+
 	HRESULT Image2Geodetic(int nRow,int nCol,double fHeight,double* pLat,double* pLon,double* pAltitude);
 	HRESULT Initialize(char* pszAuxFile,char* pszEphFile,char* pszAttFile,char* pszCamFile);
 	HRESULT ContrustRPC(char* pszRPCFile);
 	HRESULT Geodetic2Map(double Latitude, double Longitude, double * pX, double * pY);		// Lat/Lon --> Geodetic coordinate. [WeiZ,4/21/2009]
-	// è¿­ä»£è®¡ç®—å¤–æ–¹ä½å…ƒç´  [ZuoW,2010/5/1]
-	HRESULT InteriavteOrientation(double* pIX, double* pIY, double* pGX, double* pGY,
-		double* pGZ, int nGcpNum, double dOrientation[12]);
-	// è·å–ç›¸æœºå‚æ•° [ZuoW,2010/5/4]
-	HRESULT GetCamCoef(double dCamCoef[6]);
-	void InitializeCamera(char* pszCamFile);
-	
 protected:
 	void MultipleMatrix(double * m1 , double *m2 , double *  multiple, int nDimension);
+	void InitializeCamera(char* pszCamFile);
 	void CreateRotMatrixPOK(double phi, double omega, double kappa, double rotMatrix[3][3]);
 	void CreateRotMatrixPOK2(double phi, double omega, double kappa, double rotMatrix[3][3]);
 	Attitude AttitudeDate(double fDate);
@@ -142,12 +135,12 @@ protected:
 	void dldltban2 (double* l,double* d,double* b,double* x,int n,int wide);
 
 private:
-	int m_nRows,m_nCols;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	double m_fT0;//ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
+	int m_nRows,m_nCols;//¾°ĞĞÁĞÊı
+	double m_fT0;//¾°ÖĞĞÄ³ÉÏñÊ±¼ä
 	double m_fLSP;//Line Sampling Period
-	CFArray<Ephemeris> m_Ephemeris;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	CFArray<Attitude> m_Attitude;//ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
-	CFArray<double> m_ScanFrameTime;//IRSÖ¡É¨ï¿½è¿ªÊ¼Ê±ï¿½ï¿½
+	CFArray<Ephemeris> m_Ephemeris;//ĞÇÀú²ÎÊı
+	CFArray<Attitude> m_Attitude;//×ËÌ¬²ÎÊı
+	CFArray<double> m_ScanFrameTime;//IRSÖ¡É¨Ãè¿ªÊ¼Ê±¼ä
 	double m_fDatasetFrameLat[4];
 	double m_fDatasetFrameLon[4];
 	double m_fDatasetCenterLat;

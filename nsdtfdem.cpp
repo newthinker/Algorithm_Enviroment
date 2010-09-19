@@ -111,9 +111,13 @@ HRESULT CNSDTFDEM::Open(char* pszPathName,double lfAltitudeOffset,UINT accMode)
 						m_MinAltitude=pAltitudeIndex[j];
 					}
 
+					temp+=pAltitudeIndex[j];
 					nCount++;
-					m_AveAltitude += (pAltitudeIndex[j]-m_AveAltitude)/nCount;				// 计算均值
 				}
+			}
+			if(nCount>0)
+			{
+				m_AveAltitude+=(temp/nCount);
 			}
 		}
 	}
@@ -146,12 +150,17 @@ HRESULT CNSDTFDEM::Open(char* pszPathName,double lfAltitudeOffset,UINT accMode)
 						m_MinAltitude=pAltitudeIndex[j];
 					}
 
+					temp+=pAltitudeIndex[j];
 					nCount++;
-					m_AveAltitude += (pAltitudeIndex[j]-m_AveAltitude)/nCount;				// 计算均值
 				}
+			}
+			if(nCount>0)
+			{
+				m_AveAltitude+=(temp/nCount);
 			}
 		}
 	}
+	m_AveAltitude/=m_nRows;
 	fclose(fp);
 	
 	//����DEMդ��Ӱ��

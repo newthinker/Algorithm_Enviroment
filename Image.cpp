@@ -370,9 +370,8 @@ HRESULT CImage::Open(char* pszPathName,UINT uMode)
 			double X0,Y0,X2,Y2;
 			X0=grdTransform[0];
 			Y0=grdTransform[3];
-			// 差一个像素 [ZuoW,2010/6/29]
-			X2=grdTransform[0]+(m_nCols-1)*grdTransform[1]+(m_nRows-1)*grdTransform[2];
-			Y2=grdTransform[3]+(m_nCols-1)*grdTransform[4]+(m_nRows-1)*grdTransform[5];
+			X2=grdTransform[0]+m_nCols*grdTransform[1]+m_nRows*grdTransform[2];
+			Y2=grdTransform[3]+m_nCols*grdTransform[4]+m_nRows*grdTransform[5];
 
 			m_LBX=__min(X0,X2);
 			m_LBY=__min(Y0,Y2);
@@ -1793,6 +1792,7 @@ HRESULT CImage::SetDPI(float xDPI,float yDPI)
 
 	return S_FALSE;
 }
+
 
 //add by  dy 20081027 for get sensortype begin
 HRESULT CImage::GetSensorType(int * pSensorType)

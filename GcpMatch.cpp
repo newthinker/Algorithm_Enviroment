@@ -50,7 +50,7 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 	int nBandNum;
 	warpImage.GetBandNum(&nBandNum);
 	double LBX,LBY,RTX,RTY,GSD;
-	// Get the image's info: LeftBottomX, LeftBottomY and GridSpacingDistance. [Zuo.Wei,4/9/2009]
+	// Get the image's info: LeftBottomX, LeftBottomY and GridSpacingDistance. [ZuoW,2009/4/9]
 	warpImage.GetGrdInfo(&LBX,&LBY,&GSD);	
 	RTX=LBX+GSD*nCols;
 	RTY=LBY+GSD*nRows;
@@ -152,9 +152,37 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 	progress.SetRange(0,strGcpFiles.GetSize());
 	progress.SetStep(1);
 	progress.SetPosition(0);
-	//��ʼ��ƥ��
-	HRESULT hRet=S_FALSE;
+
 	*pGcpNum=0;
+	// 设置匹配的起止波段号 [ZuoW,2010/09/16]
+	int nBandID1, nBandID2;
+	int nSensor;
+	warpImage.GetSensorType(&nSensor);
+	if(nSensor==SENSOR_CCD||nSensor==SENSOR_CCD1||nSensor==SENSOR_CCD2)
+	{
+		nBandID1 = 1;
+		nBandID2 = nBandNum;
+	}
+	else if(nSensor==SENSOR_IRS)
+	{
+		nBandID1 = 1;
+		nBandID2 = nBandNum-1;		// 对于红外传感器的第四个波段需要进行特殊处理 [ZuoW, 2010/09/16]
+	}
+	else if(nSensor==SENSOR_HSI)
+	{
+		if(nBandNum>30)
+		{
+			nBandID1 = 30;
+			nBandID2 = nBandNum;
+		}
+		else
+		{
+			nBandID1 = 1;
+			nBandID2 = nBandNum;
+		}
+	}
+
+	printf("------------The first time------------\n");
 	for(i=0;i<strGcpFiles.GetSize();i++)
 	{
 		if(pGX[i]<LBX||pGX[i]>RTX||pGY[i]<LBY||pGY[i]>RTY)
@@ -205,8 +233,71 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							pImageBuffer,nMatchWindowCols,nMatchWindowRows,nBandNum,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
+#ifndef ONE_BAND
+		// GCP match warp image's each band until successful. [ZuoW,2010/09/12]
+		for(int j=nBandID2; j>=nBandID1; j--)
+		{
+			BYTE* pTempBuffer = new BYTE[nMatchWindowCols*nMatchWindowRows*nBPB];
+			memset(pTempBuffer, 0, nMatchWindowCols*nMatchWindowRows*nBPB);
+			Gray(pImageBuffer, pTempBuffer, nMatchWindowRows, nMatchWindowCols, nBandNum, j, nBPB);
+/*			/////////////////////////////////
+			if(i==27&&j==nBandNum)
+			{
+				FILE* fp = fopen("/dps/workdir/CCD2/LEVEL3/374/0_dst.raw", "w+");
+				if(fp!=NULL)
+				{
+					fwrite(pTempBuffer, nBPB, nMatchWindowRows*nMatchWindowCols, fp);
+					fclose(fp);
+				}
+			}
+*/			/////////////////////////////////
+			double X,Y,Coef;
+			hRes=PatternMatch.PatternMatch(pTempBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
+												pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
+												Pixel_Byte,
+												&X,&Y,&Coef);
+			if(hRes==S_OK)
+			{
+				progress.StepIt();
+	
+				double xOffset=x0+X-pIX[i];
+				double yOffset=y0+Y-pIY[i];
+	
+				pIX[i]=x0+X;
+				pIY[i]=y0+Y;
+				bSucceeded[i]=TRUE;
+				
+				printf("%s  Success!\n", strGcpFiles[i]);
+				
+				*pGcpNum+=1;
+	
+				for(int j=0;j<strGcpFiles.GetSize();j++)
+				{
+					if(bSucceeded[j]==FALSE)
+					{
+						pIX[j]+=xOffset;
+						pIY[j]+=yOffset;
+					}
+				}
+				
+				break;
+			}
+			
+			delete [] pTempBuffer; 		pTempBuffer = NULL;
+		}
+#else
 		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
-//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
+/*		/////////////////////////
+		if(i==27)
+		{
+			FILE* fp = fopen("/dps/workdir/CCD2/LEVEL3/374/0_ori.raw", "w+");
+			if(fp!=NULL)
+			{
+				fwrite(pImageBuffer, nBPB, nMatchWindowRows*nMatchWindowCols, fp);
+				fclose(fp);
+			}
+		}
+*/		/////////////////////////
 		double X,Y,Coef;
 		hRes=PatternMatch.PatternMatch(pImageBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
 											pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
@@ -222,9 +313,9 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 			pIX[i]=x0+X;
 			pIY[i]=y0+Y;
 			bSucceeded[i]=TRUE;
-			
+
 			printf("%s  Success!\n", strGcpFiles[i]);
-			
+
 			*pGcpNum+=1;
 
 			for(int j=0;j<strGcpFiles.GetSize();j++)
@@ -235,14 +326,16 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 					pIY[j]+=yOffset;
 				}
 			}
-			
-			break;
 		}
+#endif
 
 		delete [] pGcpBuffer; pGcpBuffer=NULL;
 		delete [] pImageBuffer; pImageBuffer=NULL;
 	}
-	//���ǰ4��ƥ��
+	printf("-------------Match successful %d pairs.---------------\n", *pGcpNum);
+	int number = *pGcpNum;
+	
+	printf("------------The secend time------------\n");
 //	if(*pGcpNum<=0)
 //	{
 //		goto EXIT; 
@@ -302,10 +395,39 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							pImageBuffer,nMatchWindowCols,nMatchWindowRows,nBandNum,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
-		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
-//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
-		printf("%s\n", strGcpFiles[i]);
+#ifndef ONE_BAND
+		for(int j=nBandID2; j>=nBandID1; j--)
+		{
+			BYTE* pTempBuffer = new BYTE[nMatchWindowCols*nMatchWindowRows*nBPB];
+			memset(pTempBuffer, 0, nMatchWindowCols*nMatchWindowRows*nBPB);
+			
+			Gray(pImageBuffer, pTempBuffer, nMatchWindowRows,nMatchWindowCols, nBandNum, j, nBPB);
+			
+			double X,Y,Coef;
+			hRes=PatternMatch.PatternMatch(pTempBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
+												pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
+												Pixel_Byte,
+												&X,&Y,&Coef);
+			if(hRes==S_OK)
+			{
+				progress.StepIt();
+	
+				pIX[i]=x0+X;
+				pIY[i]=y0+Y;
+				bSucceeded[i]=TRUE;
+				
+				printf("%s  Success!\n", strGcpFiles[i]);
 		
+				*pGcpNum+=1;
+				
+				break;
+			}
+
+			delete [] pTempBuffer;		pTempBuffer = NULL;
+		}
+#else
+		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
+
 		double X,Y,Coef;
 		hRes=PatternMatch.PatternMatch(pImageBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
 											pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
@@ -318,65 +440,20 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 			pIX[i]=x0+X;
 			pIY[i]=y0+Y;
 			bSucceeded[i]=TRUE;
-			
+
 	        printf("%s  Success!\n", strGcpFiles[i]);
-	
+
 			*pGcpNum+=1;
-			
-			// if(*pGcpNum==4)
-			// {
-				// break;
-			// }
 		}
+#endif
 
 		delete [] pGcpBuffer; pGcpBuffer=NULL;
 		delete [] pImageBuffer; pImageBuffer=NULL;
 	}
-	//���ǰ4�㹹��һ�ζ���ʽ�任����
-	/*if(*pGcpNum>=4)
-	{
-		double xCoef[10];
-		double a0[10], ab0[10], aa0[100], b0;
-		memset(aa0,0,sizeof(double)*9);
-		memset(ab0,0,sizeof(double)*3);
-
-		double yCoef[10];
-		double a1[10], ab1[10], aa1[100], b1;
-		memset(aa1,0,sizeof(double)*9);
-		memset(ab1,0,sizeof(double)*3);
-
-		for(i=0;i<strGcpFiles.GetSize();i++)	
-		{
-			if(bSucceeded[i]==TRUE)
-			{
-				*(a0+0) = 1;
-				*(a0+1) = pGX[i];
-				*(a0+2) = pGY[i];
-
-				b0 = pIX[i];
-				dnrml(a0,3,b0,aa0,ab0);
-
-				*(a1+0) = 1;
-				*(a1+1) = pGX[i];
-				*(a1+2) = pGY[i];
-
-				b1 = pIY[i];
-				dnrml(a1,3,b1,aa1,ab1);
-			}
-		}
-		dsolve(aa0, ab0, xCoef,3,3);
-		dsolve(aa1, ab1, yCoef,3,3);
-		for(i=0;i<strGcpFiles.GetSize();i++)
-		{
-			if(bSucceeded[i]==TRUE)
-			{
-				continue;
-			}
-			pIX[i]=xCoef[0]+xCoef[1]*pGX[i]+xCoef[2]*pGY[i];
-			pIY[i]=yCoef[0]+yCoef[1]*pGX[i]+yCoef[2]*pGY[i];
-		}
-	}*/
-
+	printf("----------------Match successful %d pairs.--------------\n", *pGcpNum-number);
+	number = *pGcpNum;
+		
+	printf("------------The third time------------\n");
 	//lfMatchWindow=lfTempMatchWindow*2/3;
 	for(i=0;i<strGcpFiles.GetSize();i++)
 	{
@@ -442,8 +519,37 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 							pImageBuffer,nMatchWindowCols,nMatchWindowRows,nBandNum,
 							0,0,nMatchWindowCols,nMatchWindowRows,
 							-1,0);
+#ifndef ONE_BAND
+		for(int j=nBandID2; j>=nBandID1;j--)
+		{
+			BYTE* pTempBuffer = new BYTE[nMatchWindowCols*nMatchWindowRows*nBPB];
+			memset(pTempBuffer, 0, nMatchWindowCols*nMatchWindowRows*nBPB);
+
+			Gray(pImageBuffer, pTempBuffer, nMatchWindowRows, nMatchWindowCols, nBandNum, j, nBPB);
+
+			double X,Y,Coef;
+			hRes=PatternMatch.PatternMatch(pTempBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
+												pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
+												Pixel_Byte,
+												&X,&Y,&Coef);
+			if(hRes==S_OK)
+			{
+				pIX[i]=x0+X;
+				pIY[i]=y0+Y;
+				bSucceeded[i]=TRUE;
+				
+				printf("%s  Success!\n", strGcpFiles[i]);
+	
+				*pGcpNum+=1;
+
+				break;
+			}
+
+			delete [] pTempBuffer;		pTempBuffer = NULL;
+		}
+#else
 		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,DataType);
-//		Gray(pImageBuffer,nMatchWindowRows,nMatchWindowCols,nBandNum,90);
+
 		double X,Y,Coef;
 		hRes=PatternMatch.PatternMatch(pImageBuffer,nMatchWindowRows,nMatchWindowCols,GSD,
 											pGcpBuffer,nGcpRows,nGcpCols,gcpGSD,
@@ -454,16 +560,17 @@ HRESULT CGcpMatch::Match(char* pszWarpFile,
 			pIX[i]=x0+X;
 			pIY[i]=y0+Y;
 			bSucceeded[i]=TRUE;
-			
+
 			printf("%s  Success!\n", strGcpFiles[i]);
 
 			*pGcpNum+=1;
 		}
+#endif
 
 		delete [] pGcpBuffer; pGcpBuffer=NULL;
 		delete [] pImageBuffer; pImageBuffer=NULL;
 	} 
-	
+	printf("-------------Match successful %d pairs.--------------\n", *pGcpNum - number);
 	
 	//��С���˷�ƥ��
 	/*if(*pGcpNum<6)
@@ -607,7 +714,7 @@ EXIT:
 	return *pGcpNum>0?S_OK:S_FALSE;
 }
 
-void CGcpMatch::Gray(BYTE *pBuffer, int nRows, int nCols, int nBandNum, UINT datatype)
+void CGcpMatch::Gray(BYTE* &pBuffer, int nRows, int nCols, int nBandNum, UINT datatype)
 {
 	for(int i=0;i<nRows;i++)
 	{
@@ -630,7 +737,7 @@ void CGcpMatch::Gray(BYTE *pBuffer, int nRows, int nCols, int nBandNum, UINT dat
 /**************************************************************************************
  * Select one band in multi_band image. [ZuoW,2010/2/4]
  **************************************************************************************/
-void CGcpMatch::Gray(BYTE *pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum)
+void CGcpMatch::Gray(BYTE* &pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum)
 {
 	for(int i=0;i<nRows;i++)
 	{
@@ -639,6 +746,24 @@ void CGcpMatch::Gray(BYTE *pBuffer, int nRows, int nCols, int nBandNum, int nSel
 		for(int j=0;j<nCols;j++)
 		{
 			BYTE* pPxlIndex=pRowIndex+j*nBandNum;
+
+			pGrayIndex[j] = pPxlIndex[nSelBandNum-1];
+		}
+	}
+}
+
+/*
+ *  Select one band data in multi_band_image from pMutBuffer to pBuffer. [ZuoW,2010/09/12] 
+ */
+void CGcpMatch::Gray(BYTE* pMulBuffer, BYTE* &pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum, UINT datatype)
+{
+	for(int i=0;i<nRows;i++)
+	{
+		BYTE* pGrayIndex=pBuffer+i*nCols*datatype;
+		BYTE* pRowIndex=pMulBuffer+i*nCols*nBandNum*datatype;
+		for(int j=0;j<nCols;j++)
+		{
+			BYTE* pPxlIndex=pRowIndex+j*nBandNum*datatype;
 
 			pGrayIndex[j] = pPxlIndex[nSelBandNum-1];
 		}

@@ -20,8 +20,9 @@ public:
 	HRESULT Match(char* pszWarpFile,char* pszGcpFiles,double lfMatchWindow,double* pGX,double* pGY,double* px,double* py,int* pGcpNum,BOOL* bSucceeded);
 protected:
 	BOOL Moravec(BYTE* pBuffer,int nRows,int nCols,int* pPtRow,int* pPtCol);
-	void Gray(BYTE* pBuffer,int nRows,int nCols,int nBandNum,UINT datatype);
-	void Gray(BYTE *pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum);
+	void Gray(BYTE* &pBuffer,int nRows,int nCols,int nBandNum,UINT datatype);
+	void Gray(BYTE* &pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum);
+	void Gray(BYTE* pMulBuffer, BYTE* &pBuffer, int nRows, int nCols, int nBandNum, int nSelBandNum, UINT datatype);
 	int dnrml (double* aa,int n,double bb,double* a,double* b);
 	void dsolve (double* a,double* b,double* x,int n,int wide);
 	void dldltban1 (double* a,double* d,double* l,int n,int wide);

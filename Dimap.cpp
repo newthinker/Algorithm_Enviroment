@@ -1,13 +1,9 @@
-﻿// Dimap.cpp: implementation of the CDimap class.
+// Dimap.cpp: implementation of the CDimap class.
 //
 //////////////////////////////////////////////////////////////////////
-#include <stdio.h>
-#include <gsl/gsl_linalg.h>		// gsl数学库
-#include <gsl/gsl_blas.h>
-#include "apfloat.h"
-#include "apcplx.h"
 
 #include "Dimap.h"
+#include <stdio.h>
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -30,41 +26,6 @@ CDimap::~CDimap()
 
 void CDimap::CreateRotMatrixPOK(double phi, double omega, double kappa, double rotMatrix[3][3])
 {
-#ifdef APFLOAT
-	apfloat fPhi = phi;
-	apfloat fOmega = omega;
-	apfloat fKappa = kappa;
-	apfloat tmp;
-
-	tmp = cos(fPhi)*cos(fKappa) - sin(fPhi)*sin(fOmega)*sin(fKappa);
-	tmp.prec(64);
-	rotMatrix[0][0] = ap2double(tmp.ap);
-
-	tmp = -cos(fPhi)*sin(fKappa)-sin(fPhi)*sin(fOmega)*cos(fKappa);
-	rotMatrix[0][1] = ap2double(tmp.ap);
-
-	tmp = -sin(fPhi)*cos(fOmega);
-	rotMatrix[0][2] = ap2double(tmp.ap);
-
-	tmp = cos(fOmega)*sin(fKappa);
-	rotMatrix[1][0] = ap2double(tmp.ap);
-
-	tmp = cos(fOmega)*cos(fKappa);
-	rotMatrix[1][1] = ap2double(tmp.ap);
-
-	tmp = -sin(fOmega);
-	rotMatrix[1][2] = ap2double(tmp.ap);
-
-	tmp = sin(fPhi)*cos(fKappa)+cos(fPhi)*sin(fOmega)*sin(fKappa);
-	rotMatrix[2][0] = ap2double(tmp.ap);
-
-	tmp = -sin(fPhi)*sin(fKappa)+cos(fPhi)*sin(fOmega)*cos(fKappa);
-	rotMatrix[2][1] = ap2double(tmp.ap);
-
-	tmp = cos(fPhi)*cos(fOmega);
-	rotMatrix[2][2] = ap2double(tmp.ap);
-
-#else
 	rotMatrix[0][0]=cos(phi)*cos(kappa)-sin(phi)*sin(omega)*sin(kappa);//a1
 	rotMatrix[0][1]=-cos(phi)*sin(kappa)-sin(phi)*sin(omega)*cos(kappa);//a2
 	rotMatrix[0][2]=-sin(phi)*cos(omega);//a3
@@ -76,22 +37,21 @@ void CDimap::CreateRotMatrixPOK(double phi, double omega, double kappa, double r
 	rotMatrix[2][0]=sin(phi)*cos(kappa)+cos(phi)*sin(omega)*sin(kappa);//c1
 	rotMatrix[2][1]=-sin(phi)*sin(kappa)+cos(phi)*sin(omega)*cos(kappa);//c2
 	rotMatrix[2][2]=cos(phi)*cos(omega);//c3
-#endif
 }
 
 void CDimap::CreateRotMatrixPOK2(double phi, double omega, double kappa, double rotMatrix[3][3])
 {
-	rotMatrix[0][0]=cos(phi)*cos(kappa);// cos锟秸★拷cos锟绞★拷
-	rotMatrix[0][1]=-cos(phi)*sin(kappa);// -cos锟秸★拷sin锟绞★拷 
-	rotMatrix[0][2]=-sin(phi);// -sin锟秸★拷
+	rotMatrix[0][0]=cos(phi)*cos(kappa);// cos�ա�cos�ʡ�
+	rotMatrix[0][1]=-cos(phi)*sin(kappa);// -cos�ա�sin�ʡ� 
+	rotMatrix[0][2]=-sin(phi);// -sin�ա�
 
-	rotMatrix[1][0]=cos(omega)*sin(kappa)-sin(omega)*sin(phi)*cos(kappa);// cos锟截★拷sin锟绞★拷 锟紺sin锟截★拷 sin锟秸★拷cos锟绞★拷 
-	rotMatrix[1][1]=cos(omega)*cos(kappa)+sin(omega)*sin(phi)*sin(kappa);//cos锟截★拷cos锟绞★拷+ sin锟截★拷 sin锟秸★拷sin锟绞★拷 
-	rotMatrix[1][2]=-sin(omega)*cos(phi);// -sin锟截★拷 cos锟秸★拷
+	rotMatrix[1][0]=cos(omega)*sin(kappa)-sin(omega)*sin(phi)*cos(kappa);// cos�ء�sin�ʡ� �Csin�ء� sin�ա�cos�ʡ� 
+	rotMatrix[1][1]=cos(omega)*cos(kappa)+sin(omega)*sin(phi)*sin(kappa);//cos�ء�cos�ʡ�+ sin�ء� sin�ա�sin�ʡ� 
+	rotMatrix[1][2]=-sin(omega)*cos(phi);// -sin�ء� cos�ա�
 
-	rotMatrix[2][0]=sin(omega)*sin(kappa)+cos(omega)*sin(phi)*cos(kappa);// sin锟截★拷sin锟绞★拷+ cos锟截★拷sin锟秸★拷cos锟绞★拷
-	rotMatrix[2][1]=sin(omega)*cos(kappa)-cos(omega)*sin(phi)*sin(kappa);// sin锟截★拷cos锟绞★拷- cos锟截★拷sin锟秸★拷sin锟绞★拷
-	rotMatrix[2][2]=cos(phi)*cos(omega);// cos锟秸★拷cos锟斤拷
+	rotMatrix[2][0]=sin(omega)*sin(kappa)+cos(omega)*sin(phi)*cos(kappa);// sin�ء�sin�ʡ�+ cos�ء�sin�ա�cos�ʡ�
+	rotMatrix[2][1]=sin(omega)*cos(kappa)-cos(omega)*sin(phi)*sin(kappa);// sin�ء�cos�ʡ�- cos�ء�sin�ա�sin�ʡ�
+	rotMatrix[2][2]=cos(phi)*cos(omega);// cos�ա�cos��
 }
 double CDimap::ParseTime(char* pszTime)
 {
@@ -264,12 +224,10 @@ void CDimap::dnrml (double* aa,int n,double bb,double* a,double* b)
 {
 	register int  i,j;
 				                          	
-	for (i=0; i<n; i++) 
-	{
- 	     for (j=0; j<n-i; j++) 
-		 {
+	for (i=0; i<n; i++) {
+ 	     for (j=0; j<n-i; j++) {
 	        *a += *aa * *(aa+j);
-            a++; 
+                a++; 
 	     }
 	     *b += *aa * bb;
 	     b++; aa++;
@@ -306,8 +264,7 @@ void CDimap::dldltban1 (double* a,double* d,double* l,int n,int wide)
 	for (i=0; i<m-wide; i++) *c++ = *a++;
 	c=co; a=ao;
 
-	for (k=1; k<n; k++) 
-	{
+	for (k=1; k<n; k++) {
 	   if (k<n-wide+2) kk=wide-1;
 	   else kk--;
 	
@@ -316,19 +273,18 @@ void CDimap::dldltban1 (double* a,double* d,double* l,int n,int wide)
 	   if (k<n-wide+1) km=wide;
 	   else km=n-k+1;
 
-	   for (i=1; i<kk+1; i++) 
-	   {
-			*l = *aa++ / *d;
-			for (j=0; j<kk-i+1; j++) *(a+j) -= *l * *(aa+j-1);
+	   for (i=1; i<kk+1; i++) {
+              *l = *aa++ / *d;
+	      for (j=0; j<kk-i+1; j++) *(a+j) -= *l * *(aa+j-1);
               l++;
 
-            if (k+i>n-wide+1) km--;
+              if (k+i>n-wide+1) km--;
               a += km;
-       }
+           }
 
-		a=aa; d++;
-        if (k==n-1)  *d = *a;
-    }
+	   a=aa; d++;
+           if (k==n-1)  *d = *a;
+        }
 
 	a=ao;  a +=wide;
 	for (i=0; i<m-wide; i++) *a++ = *c++;
@@ -422,7 +378,8 @@ HRESULT CDimap::Image2Geodetic(int nRow, int nCol, double fHeight, double *pLat,
 				int nHalfCols=m_nCols/2;
 				if(m_nSatelliteID==HJ1A&&m_nSensorType==HJ1A_CCD)
 				{
-					if(nCol<nHalfCols)					
+					if(nCol<nHalfCols)
+					
 					{
 						nCameraIndex=HJ1A_CCD1;
 					}
@@ -509,7 +466,6 @@ HRESULT CDimap::Image2Geodetic(int nRow, int nCol, double fHeight, double *pLat,
 
 	return S_FALSE;
 }
-
 void CDimap::InitializeCamera(char* pszCamFile)
 {
 	FILE* fpAux=fopen(pszCamFile,"rt");
@@ -791,6 +747,9 @@ void CDimap::InitializeCamera(char* pszCamFile)
 
 }
 
+/*
+
+*/
 HRESULT CDimap::Initialize(char* pszAuxFile,
 						   char* pszEphFile,
 						   char* pszAttFile,
@@ -958,6 +917,7 @@ HRESULT CDimap::Initialize(char* pszAuxFile,
 		}
 	}
 
+
 	int nEphNum=0;
 	while(!feof(fpEph))
 	{
@@ -1115,6 +1075,11 @@ HRESULT CDimap::Initialize(char* pszAuxFile,
 		m_fDatasetFrameLon[i]=m_fDatasetFrameLon[i]*180.0/PI;
 	}
 
+/*	double tempx0,tempy0,tempz0;
+	Image2Geodetic(1000,23800/2-1,0,&tempx0,&tempy0,&tempz0);
+	double tempx1,tempy1,tempz1;
+	Image2Geodetic(1000,23800/2,0,&tempx1,&tempy1,&tempz1);
+*/
 	return S_OK;
 }
 
@@ -1123,7 +1088,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 	double fAltitudeMin=-5000;
 	double fAltitudeMax=5000;
 
-	//锟斤拷锟斤拷细窦负锟侥ｏ拷凸锟斤拷锟斤拷锟狡革拷锟斤拷
+	//����ϸ񼸺�ģ�͹�����Ƹ���
 	const int nInterval=__min(m_nRows/25,m_nCols/25);
 	const int nLayerNum=10;
 	
@@ -1141,7 +1106,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 		/*FILE* fp=NULL;
 		if(nLayer==5)
 		{
-			fp=fopen("F:\\HJ-AB-Data\\一锟斤拷影锟斤拷\\test.gcp","wt");
+			fp=fopen("F:\\HJ-AB-Data\\һ��Ӱ��\\test.gcp","wt");
 			fprintf(fp,";\n");
 			fprintf(fp,";\n");
 			fprintf(fp,";\n");
@@ -1182,7 +1147,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 		return S_OK;*/
 	}
 	nGCPNum=nIndex;
-	//锟斤拷锟斤拷一锟斤拷
+	//����һ��
 	double LAT_OFF=0,LONG_OFF=0,HEIGHT_OFF=0,LINE_OFF=0,SAMP_OFF=0;
 	double LAT_SCALE=0,LONG_SCALE=0,HEIGHT_SCALE=0,LINE_SCALE=0,SAMP_SCALE=0;
 	double maxLat=pLat[0],minLat=pLat[0];
@@ -1264,7 +1229,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 		pSamp[i]=(pSamp[i]-SAMP_OFF)/SAMP_SCALE;
 	}
 
-	//锟斤拷锟斤拷RPC锟斤拷锟斤拷
+	//����RPC����
 	int nTimes=0;
 	int n;
 	double fLCoef[39],fSCoef[39];
@@ -1279,7 +1244,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 		double* H=pHeight;
 		double* X=pSamp;
 		double* Y=pLine;
-		//锟叫凤拷锟斤拷
+		//�з���
 		memset(aa,0,sizeof(double)*1521);
 		memset(ab,0,sizeof(double)*39);
 		for(i=0; i<nGCPNum; i++)	
@@ -1350,7 +1315,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 			n+=(39-i);
 		}
 		dsolve(aa,ab, fLCoef0, 39, 39);
-		//锟叫凤拷锟斤拷
+		//�з���
 		memset(aa,0,sizeof(double)*1521);
 		memset(ab,0,sizeof(double)*39);
 		for(i=0; i<nGCPNum; i++)	
@@ -1422,7 +1387,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 		}
 		dsolve(aa,ab, fSCoef0, 39, 39);
 
-		//锟叫断碉拷锟斤拷锟斤拷
+		//�жϵ�����
 		double fMaxLError=fabs(fLCoef[0]-fLCoef0[0]);
 		for(i=1;i<20;i++)
 		{
@@ -1460,7 +1425,7 @@ HRESULT CDimap::ContrustRPC(char* pszRPCFile)
 	delete [] pSamp; pSamp=NULL;
 	delete [] pLine; pLine=NULL;
 
-	//锟斤拷录RPC锟斤拷锟斤拷
+	//��¼RPC����
 	FILE* fp=fopen(pszRPCFile,"wt");
 	if(fp==NULL)
 	{
@@ -1545,301 +1510,4 @@ HRESULT CDimap::Geodetic2Map(double Latitude, double Longitude, double * pGX, do
 {
 	m_Projection.Geodetic2Map(Latitude, Longitude, pGX, pGY);
 }
-
-/*
-* 通过迭代计算外方位元素 [ZuoW,2010/4/28]
-*/
-HRESULT CDimap::InteriavteOrientation(double* pIX, double* pIY, double* pGX, double* pGY, 
-	double* pGZ, int nGcpNum, double dOrientation[12])
-{
-	// 源影像参数
-	int nSrcCol = dOrientation[3];
-	int nSrcRow = dOrientation[4];
-	double dCellSize = dOrientation[2];
-	double dFocus = (m_CCDCamera[m_nSensorType].lfFocus)*1e-3;		// CCD焦距 	0.141
-	double dCCDLength = (m_CCDCamera[m_nSensorType].lfScanSize)*1e2;	// CCD像元大小	0.65
-	int time = 1;	// 迭代次数
-	
-	// 初始外方位元素
-	double dOriX = dOrientation[0]+((nSrcCol+1)/2)*dCellSize;
-	double dOriY = dOrientation[1]+((nSrcRow+1)/2)*dCellSize;
-	double dOriZ = (dOrientation[2]*dFocus/dCCDLength)*100000;
-	double Phi = 0.0;
-	double Omega = 0.0;
-	double Kappa = 0.0;
-	
-	// 将控制点坐标转换成框标坐标系
-	int i, j, k;
-	for(i=0; i<nGcpNum; i++)
-	{
-		pIX[i] = ((pIX[i]-(nSrcCol+1)/2)*dCCDLength)/100000;
-		pIY[i] = ((pIY[i]-(nSrcRow+1)/2)*dCCDLength)/100000;
-	}
-	
-	double rotMatrix[3][3];
-	double a[2][6];
-	double dOffset[6];
-	double *dArr = new double[2*nGcpNum*6];
-	double *dL = new double[2*nGcpNum];
-	double dInv[6*6];
-	double* dTransArr = new double[6*2*nGcpNum];
-	
-	while (time)
-	{
-		// 初始化 [ZuoW,2010/5/6]
-		memset(rotMatrix, 0, 3*3*sizeof(double));
-		memset(a, 0, 2*6*sizeof(double));
-		memset(dOffset, 0, 6*sizeof(double));
-		memset(dArr, 0, 2*nGcpNum*6*sizeof(double));
-		memset(dL, 0, 2*nGcpNum*sizeof(double));
-		memset(dInv, 0, 6*6*sizeof(double));
-		memset(dTransArr, 0, 6*2*nGcpNum*sizeof(double));
-
-		CreateRotMatrixPOK(Phi, Omega, Kappa, rotMatrix);
-		
-		for(i=0; i<nGcpNum; i++)
-		{
-			//计算X/Y坐标
-			double dPSimilarX = -dFocus*(rotMatrix[0][0]*(pGX[i]-dOriX) + 
-				rotMatrix[1][0]*(pGY[i]-dOriY) + rotMatrix[3][0]*(pGZ[i]-dOriZ));
-			dPSimilarX /= (rotMatrix[0][2]*(pGX[i]-dOriX)+rotMatrix[1][2]*(pGY[i]-dOriY) +
-				rotMatrix[2][2]*(pGZ[i]-dOriZ)); 
-			double dPSimilarY = -dFocus*(rotMatrix[0][1]*(pGX[i]-dOriX) + 
-				rotMatrix[1][1]*(pGY[i]-dOriY) + rotMatrix[3][1]*(pGZ[i]-dOriZ));
-			dPSimilarY /= (rotMatrix[0][2]*(pGX[i]-dOriX)+rotMatrix[1][2]*(pGY[i]-dOriY) +
-				rotMatrix[2][2]*(pGZ[i]-dOriZ));
-			// 计算系数	
-			double dTemp = (rotMatrix[0][2]*(pGX[i]-dOriX) + rotMatrix[1][2]*(pGY[i]-dOriY) + rotMatrix[2][2]*(pGZ[i]-dOriZ));
-			a[0][0] = (rotMatrix[0][0]*dFocus + rotMatrix[0][2]*pIX[i]);
-			a[0][0] /= dTemp;
-			a[0][1] = (rotMatrix[1][0]*dFocus + rotMatrix[1][2]*pIX[i]);
-			a[0][1] /= dTemp;
-			a[0][2] = (rotMatrix[2][0]*dFocus + rotMatrix[2][2]*pIX[i]);
-			a[0][2] /= dTemp;
-			
-			a[1][0] = (rotMatrix[0][1]*dFocus + rotMatrix[0][2]*pIY[i]);
-			a[1][0] /= dTemp;
-			a[1][1] = (rotMatrix[1][1]*dFocus + rotMatrix[1][2]*pIY[i]);
-			a[1][1] /= dTemp;
-			a[1][2] = (rotMatrix[2][1]*dFocus + rotMatrix[2][2]*pIY[i]);
-			a[1][2] /= dTemp;
-			
-			dTemp = (pIX[i]*cos(Kappa)-pIY[i]*sin(Kappa))/dFocus;
-			a[0][3] = pIY[i]*sin(Omega);
-			a[0][3] -= (pIX[i]*dTemp + dFocus*cos(Kappa))*cos(Omega);
-			
-			dTemp = pIX[i]*sin(Kappa) + pIY[i]*cos(Kappa);
-			a[0][4] = -dFocus*sin(Kappa) - pIX[i]*dTemp/dFocus;
-			
-			a[0][5] = pIY[i];
-			
-			dTemp = pIY[i]*(pIX[i]*cos(Kappa)-pIY[i]*sin(Kappa))/dFocus;
-			a[1][3] = -pIX[i]*sin(Omega) - (dTemp - dFocus*sin(Kappa))*cos(Omega);
-			
-			dTemp = pIY[i]*(pIX[i]*sin(Kappa) + pIY[i]*cos(Kappa))/dFocus;
-			a[1][4] = -dFocus*cos(Kappa) - dTemp;
-			
-			a[1][5] = -pIX[i];
-			
-			// 形成矩阵
-			for(j=0; j<6; j++)
-			{
-				dArr[2*i*6+j] = a[0][j];
-				dArr[(2*i+1)*6+j] = a[1][j];
-			}
-
-			dL[2*i] = pIX[i] - dPSimilarX;
-			dL[2*i+1]   = pIY[i] - dPSimilarY;
-		}
-		/////////////////////////////////////////////////////////////////////////////////
-		gsl_matrix_view matArr = gsl_matrix_view_array((double*)dArr, 2*nGcpNum, 6);
-
-		// 矩阵 A 的转置
-		gsl_matrix_view matTransArr = gsl_matrix_view_array(dTransArr, 6, 2*nGcpNum);
-		gsl_matrix_transpose_memcpy(&matTransArr.matrix, &matArr.matrix);
-
-		// 矩阵 A'*A
-		gsl_matrix *matMulti1 = gsl_matrix_alloc(6, 6);
-		gsl_blas_dgemm(CblasNoTrans,CblasNoTrans, 1.0, 
-			&matTransArr.matrix, &matArr.matrix, 0.0, matMulti1);
-
-		// 计算 A'*A 结果的行列式
-		int signum;
-		double det = gsl_linalg_LU_det(matMulti1, signum);
-		if(det==0)
-		{
-			printf("迭代不能收敛，计算退出!\n");
-			break;
-		}
-		
-		// 计算矩阵L的转置
-		gsl_matrix_view matL = gsl_matrix_view_array(dL, 1, 2*nGcpNum);
-		gsl_matrix *matTransL = gsl_matrix_alloc(2*nGcpNum, 1);
-		gsl_matrix_transpose_memcpy(matTransL, &matL.matrix);
-		
-		// 计算 A' * L'
-		gsl_matrix *matMulti2 = gsl_matrix_alloc(6, 1);
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-					&matTransArr.matrix, matTransL, 0.0, matMulti2);
-		
-		// 计算矩阵 (A'*A) 的逆
-		gsl_matrix_view matInv = gsl_matrix_view_array(dInv, 6, 6);
-		gsl_permutation * p = gsl_permutation_alloc (6);
-		gsl_linalg_LU_decomp (matMulti1, p, &k);
-		gsl_linalg_LU_invert (matMulti1, p, &matInv.matrix);
-		
-		// 计算 Inv(A'*A)*(A'*L')
-		gsl_matrix *matOffset = gsl_matrix_alloc(6, 1);
-		gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-				&matInv.matrix, matMulti2, 0.0, matOffset);
-
-		for(i=0; i<6; i++)
-		{
-			dOffset[i] = gsl_matrix_get(matOffset, i, 0);
-		}
-		////////////////////////////////////////////////////////////////////////////////
-		// 外方位元素
-		dOriX += dOffset[0];
-		dOriY += dOffset[1];
-		dOriZ += dOffset[2];
-		Phi += dOffset[3];
-		Omega += dOffset[4];
-		Kappa += dOffset[5];
-		
-		////////////////////////////////////////////////////////////////////////////////
-/*		FILE* pf = fopen("/home/zuow/Documents/matA.txt", "w+");
-		for(i=0; i<2*nGcpNum; i++)
-		{
-			for(j=0; j<6; j++)
-			{
-				fprintf(pf, " %8.6e ", gsl_matrix_get(&matArr.matrix, i, j));
-			}
-			fprintf(pf, "\n");
-		}
-		fclose(pf);
-
-		pf = fopen("/home/zuow/Documents/matL.txt", "w+");
-		for(i=0; i<2*nGcpNum; i++)
-		{
-			fprintf(pf, " %8.6e \n", dL[i]);
-		}
-		fclose(pf);
-
-		pf = fopen("/home/zuow/Documents/matInv.txt", "w+");
-		for(i=0; i<6; i++)
-		{
-			for(j=0; j<6; j++)
-			{
-				fprintf(pf, " %8.6e ", gsl_matrix_get(&matInv.matrix, i, j));
-			}
-			fprintf(pf, "\n");
-		}
-		fclose(pf);
-
-		pf = fopen("/home/zuow/Documents/matAL.txt", "w+");
-		for(i=0; i<6; i++)
-		{
-			for(j=0; j<1; j++)
-			{
-				fprintf(pf, " %8.6e ", gsl_matrix_get(matMulti2, i, j));
-			}
-			fprintf(pf, "\n");
-		}
-		fclose(pf);
-
-		pf = fopen("/home/zuow/Documents/matInvAA.txt", "w+");
-		for(i=0; i<6; i++)
-		{
-			for(j=0; j<6; j++)
-			{
-				fprintf(pf, " %8.6e ", gsl_matrix_get(matMulti1, i, j));
-			}
-			fprintf(pf, "\n");
-		}
-		fclose(pf);
-
-		pf = fopen("/home/zuow/Documents/Orientation.txt", "wt");
-		fprintf(pf, "The %dth Interiavter: \n", time);
-		fprintf(pf, "Offsets: %f, %f, %f, %f, %f, %f\n", dOffset[0], dOffset[1], dOffset[2], dOffset[3], dOffset[4], dOffset[5]);
-		fprintf(pf, "Orientations: %f, %f, %f, %f, %f, %f \n", dOriX, dOriY, dOriZ, Phi, Omega, Kappa);
-		fclose(pf);
-*/
-		////////////////////////////////////////////////////////////////////////////////
-
-		// 退出迭代条件(判断最大误差)
-		double dLocError = abs(dOffset[0]);
-		double dDegError = abs(dOffset[5]);
-		for(i=1; i<3; i++)
-		{
-			if(abs(dOffset[i])>dLocError)
-				dLocError = abs(dOffset[i]);
-			if(abs(dOffset[6-i-1])>dDegError)
-				dDegError = abs(dOffset[6-i-1]);
-		}
-		
-		if(dLocError<1e-5 && dDegError<PI/(1.8*(10^4)*60))
-		{
-			printf("%dth time: %f %f %f %f %f %f\n",
-					time, dOffset[0], dOffset[1], dOffset[2], dOffset[3], dOffset[4], dOffset[5]);
-			printf("%f, %f, %f, %f, %f, %f\n",
-					dOriX, dOriY, dOriZ, Phi, Omega, Kappa);
-			break;
-		}
-		
-		time++;
-
-		// 清理内存 [ZuoW,2010/5/1]
-		gsl_matrix_free(matMulti1);
-		gsl_matrix_free(matMulti2);
-		gsl_matrix_free(matOffset);
-		gsl_permutation_free (p);
-	}
-	
-	// 返回外方位元素
-	dOrientation[0] = dOriX;	dOrientation[1] = dOriY;	dOrientation[2] = dOriZ;
-	////////////////////////////////////////////////////////////////////////////////
-//	dOrientation[0] = 611115.707719;	dOrientation[1] = 3989468.321996;	dOrientation[2] = 652090.946769;
-//	Phi = 6.283072;	Omega = 3.141724;	Kappa = -9.424739;
-	////////////////////////////////////////////////////////////////////////////////
-	memset(rotMatrix, 0, 3*3*sizeof(double));
-	CreateRotMatrixPOK(Phi, Omega, Kappa, rotMatrix);
-	for(i=1; i<4; i++)
-		for(j=0; j<3; j++)
-			dOrientation[i*3+j] = rotMatrix[i-1][j];
-
-	// clear [ZuoW,2010/5/6]
-	if(dArr!=NULL)
-	{
-		delete [] dArr;		dArr = NULL;
-	}
-	if(dL!=NULL)
-	{
-		delete [] dL; 		dL = NULL;
-	}
-	if(dTransArr!=NULL)
-	{
-		delete [] dTransArr;	dTransArr = NULL;
-	}
-
-	return S_OK;
-}
-
-/*
-* 获取相机参数 [ZuoW,2010/5/4]
-*/
-HRESULT CDimap::GetCamCoef(double dCamCoef[6])
-{
-	if(m_nSensorType<0 || m_nSensorType>7)
-	{
-		printf("Invalid sensor type!\n");
-		return S_FALSE;
-	}
-	
-	dCamCoef[0] = m_CCDCamera[m_nSensorType].lfFocus;		dCamCoef[1] = m_CCDCamera[m_nSensorType].lfScanSize;		
-	dCamCoef[2] = m_CCDCamera[m_nSensorType].nCCDLength;	dCamCoef[3] = m_CCDCamera[m_nSensorType].lfRoll;
-	dCamCoef[4] = m_CCDCamera[m_nSensorType].lfPitch;		dCamCoef[5] = m_CCDCamera[m_nSensorType].lfYaw;
-	
-	return S_OK;
-}
-
 
